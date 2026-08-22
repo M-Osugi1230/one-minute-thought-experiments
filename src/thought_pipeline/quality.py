@@ -193,6 +193,46 @@ def validate_generated_package(
         add("cta_missing_ab", "CTAでA/Bを再掲していません", "scenes")
     if not any(term in cta_text for term in ("理由", "なぜ", "一言")):
         add("cta_missing_reason", "CTAで短い理由を求めていません", "scenes")
+    if not any(term in cta_text for term in ("変わ", "最初", "矢印", "→")):
+        add(
+            "cta_missing_answer_change",
+            "CTAで最初と条件変更後の回答変化を回収していません",
+            "scenes",
+            severity="warning",
+        )
+
+    planned_cursor = 0.0
+    second_question_start = None
+    for index, scene in enumerate(package.scenes):
+        if scene.purpose is ScenePurpose.reveal and scene.duration_seconds > 3.0:
+            add(
+                "reveal_too_long",
+                "名称公開が3秒を超えています。論点と並行して短く表示してください",
+                f"scenes.{index}.duration_seconds",
+                severity="warning",
+            )
+        chars_per_second = len(_normalized(scene.narration)) / scene.duration_seconds
+        if chars_per_second > 7.0:
+            add(
+                "planned_speech_too_dense",
+                f"予定読み上げ密度が高すぎます（{chars_per_second:.1f}文字/秒）",
+                f"scenes.{index}.duration_seconds",
+                severity="warning",
+            )
+        if scene.purpose is ScenePurpose.second_question:
+            second_question_start = planned_cursor
+        planned_cursor += scene.duration_seconds + scene.pause_after_seconds
+    if (
+        second_question_start is not None
+        and duration > 0
+        and second_question_start / duration > 0.72
+    ):
+        add(
+            "second_question_too_late",
+            "条件変更が動画の72%より後です。独自の見せ場を前倒ししてください",
+            "scenes",
+            severity="warning",
+        )
 
     for index, hashtag in enumerate(package.hashtags):
         if hashtag.startswith("#"):

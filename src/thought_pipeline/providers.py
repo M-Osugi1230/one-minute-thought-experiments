@@ -28,12 +28,18 @@ class OfflineGoldenProvider:
     name = "offline-golden"
     model = "golden-sample-v1"
 
-    def __init__(self, project_root: Path) -> None:
+    def __init__(self, project_root: Path, variant: str | None = None) -> None:
         self.project_root = project_root
+        self.variant = variant
+        if variant:
+            self.model = f"golden-sample-v1:{variant}"
 
     def generate(self, experiment_id: str, prompt: BuiltPrompt) -> GeneratedPackage:
         del prompt
-        path = self.project_root / "content" / "golden" / f"{experiment_id}.json"
+        root = self.project_root / "content" / "golden"
+        if self.variant:
+            root = root / "variants" / self.variant
+        path = root / f"{experiment_id}.json"
         if not path.is_file():
             raise GenerationError(f"オフラインサンプルがありません: {path}")
         try:

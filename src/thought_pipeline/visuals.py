@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 import os
 from dataclasses import dataclass
 from pathlib import Path
@@ -32,6 +33,7 @@ class FontSet:
     body: ImageFont.FreeTypeFont
     title: ImageFont.FreeTypeFont
     huge: ImageFont.FreeTypeFont
+    subtitle: ImageFont.FreeTypeFont
 
 
 def resolve_font_path(project_root: Path) -> Path:
@@ -63,13 +65,16 @@ def render_visuals(
     output_dir: Path,
     project_root: Path,
     preview: bool,
+    edit_profile: str = "classic",
 ) -> VisualResult:
+    if edit_profile not in {"classic", "kinetic"}:
+        raise ConfigurationError(f"不明な編集プロファイルです: {edit_profile}")
     scale = video.render.preview_scale if preview else 1.0
     width = round(video.canvas.width * scale)
     height = round(video.canvas.height * scale)
     fps = video.render.preview_fps if preview else video.canvas.fps
     font_path = resolve_font_path(project_root)
-    fonts = _fonts(font_path, scale)
+    fonts = _fonts(font_path, scale, video.subtitle.font_size)
 
     visuals_dir = output_dir / "visuals"
     scenes_dir = visuals_dir / "scenes"
@@ -90,6 +95,11 @@ def render_visuals(
             width,
             height,
             scale,
+            progress=0.5,
+            is_pause=(
+                edit_profile == "kinetic" and scene.purpose.value == "choice"
+            ),
+            edit_profile=edit_profile,
         )
         path = scenes_dir / f"{scene.id:02d}_{scene.purpose.value}.png"
         image.save(path, format="PNG", optimize=True)
@@ -101,6 +111,12 @@ def render_visuals(
         boundaries.update((item.start_seconds, item.pause_end_seconds))
     for cue in cues:
         boundaries.update((cue.start_seconds, cue.end_seconds))
+    if edit_profile == "kinetic":
+        for item in timeline:
+            cursor = item.start_seconds + 0.75
+            while cursor < item.pause_end_seconds:
+                boundaries.add(round(cursor, 3))
+                cursor += 0.75
     ordered = sorted(boundaries)
 
     frame_paths: list[Path] = []
@@ -118,7 +134,29 @@ def render_visuals(
             (cue for cue in cues if cue.start_seconds <= midpoint < cue.end_seconds),
             None,
         )
-        frame = base_images[active_timing.scene_id].copy()
+        if edit_profile == "kinetic":
+            scene = package.scenes[active_timing.scene_id - 1]
+            span = max(0.01, active_timing.pause_end_seconds - active_timing.start_seconds)
+            progress = max(
+                0.0,
+                min(1.0, (midpoint - active_timing.start_seconds) / span),
+            )
+            frame = _scene_card(
+                scene,
+                experiment,
+                package,
+                video,
+                voice,
+                fonts,
+                width,
+                height,
+                scale,
+                progress=progress,
+                is_pause=midpoint >= active_timing.narration_end_seconds,
+                edit_profile=edit_profile,
+            )
+        else:
+            frame = base_images[active_timing.scene_id].copy()
         if active_cue:
             _draw_subtitle(frame, active_cue.text, fonts, video, scale)
         frame_path = frames_dir / f"frame_{index:03d}.png"
@@ -142,7 +180,7 @@ def render_visuals(
     )
 
 
-def _fonts(path: Path, scale: float) -> FontSet:
+def _fonts(path: Path, scale: float, subtitle_size: int) -> FontSet:
     def font(size: int) -> ImageFont.FreeTypeFont:
         return ImageFont.truetype(str(path), max(12, round(size * scale)))
 
@@ -152,6 +190,7 @@ def _fonts(path: Path, scale: float) -> FontSet:
         body=font(58),
         title=font(76),
         huge=font(150),
+        subtitle=font(subtitle_size),
     )
 
 
@@ -165,19 +204,29 @@ def _scene_card(
     width: int,
     height: int,
     scale: float,
+    progress: float = 0.5,
+    is_pause: bool = False,
+    edit_profile: str = "classic",
 ) -> Image.Image:
     palette = video.palette
     image = Image.new("RGB", (width, height), palette.background)
     draw = ImageDraw.Draw(image, "RGBA")
-    _background(draw, width, height, palette.background_alt, palette.accent, scale)
+    _background(
+        draw,
+        width,
+        height,
+        palette.background_alt,
+        palette.accent,
+        scale,
+        progress if edit_profile == "kinetic" else 0.5,
+    )
 
     margin = round(72 * scale)
-    draw.text(
-        (margin, round(78 * scale)),
-        f"THOUGHT EXPERIMENT  #{experiment.id}",
-        font=fonts.label,
-        fill=palette.accent,
-    )
+    if edit_profile == "kinetic" and scene.purpose.value == "hook":
+        header = "あなたならどうする？"
+    else:
+        header = f"THOUGHT EXPERIMENT  #{experiment.id}"
+    draw.text((margin, round(78 * scale)), header, font=fonts.label, fill=palette.accent)
     purpose_label = scene.purpose.value.upper().replace("_", " ")
     bbox = draw.textbbox((0, 0), purpose_label, font=fonts.small)
     draw.text(
@@ -213,6 +262,9 @@ def _scene_card(
         fonts,
         experiment,
         package,
+        progress,
+        is_pause,
+        edit_profile,
     )
     disclosure = "AI生成音声" if voice.disclosure_text else ""
     bbox = draw.textbbox((0, 0), disclosure, font=fonts.small)
@@ -242,6 +294,7 @@ def _background(
     alt: str,
     accent: str,
     scale: float,
+    progress: float = 0.5,
 ) -> None:
     draw.ellipse(
         (
@@ -253,12 +306,13 @@ def _background(
         outline=(*_rgb(alt), 190),
         width=max(1, round(4 * scale)),
     )
+    drift = round((progress - 0.5) * 36 * scale)
     for offset, alpha in ((0, 70), (70, 40), (140, 20)):
         draw.line(
             (
-                round((80 + offset) * scale),
+                round((80 + offset) * scale) + drift,
                 height,
-                round((430 + offset) * scale),
+                round((430 + offset) * scale) + drift,
                 round(500 * scale),
             ),
             fill=(*_rgb(accent), alpha),
@@ -279,6 +333,9 @@ def _template_art(
     fonts: FontSet,
     experiment: Experiment,
     package: GeneratedPackage,
+    progress: float,
+    is_pause: bool,
+    edit_profile: str,
 ) -> None:
     cx = width // 2
     y_top = round(650 * scale)
@@ -289,7 +346,9 @@ def _template_art(
         _track(draw, cx, y_top, cx, split_y, foreground, scale)
         _track(draw, cx, split_y, round(245 * scale), y_bottom, foreground, scale)
         _track(draw, cx, split_y, width - round(245 * scale), y_bottom, foreground, scale)
-        _trolley(draw, cx, round(760 * scale), accent, foreground, scale)
+        trolley_progress = _ease(progress) if edit_profile == "kinetic" else 0.35
+        trolley_y = round((690 + 230 * trolley_progress) * scale)
+        _trolley(draw, cx, trolley_y, accent, foreground, scale)
         if template != "dramatic_question":
             for index in range(5):
                 _person(
@@ -299,37 +358,90 @@ def _template_art(
                     foreground,
                     scale,
                 )
+        elif edit_profile == "kinetic":
+            for index in range(5):
+                _person(
+                    draw,
+                    round((660 + (index % 3) * 90) * scale),
+                    round((1090 + (index // 3) * 110) * scale),
+                    foreground,
+                    scale,
+                )
+            _person(
+                draw,
+                round(255 * scale),
+                round(1120 * scale),
+                foreground,
+                scale,
+            )
         if template == "lever_switch":
-            _lever(draw, round(250 * scale), round(950 * scale), accent, foreground, scale)
+            _person(
+                draw,
+                round(255 * scale),
+                round(1120 * scale),
+                foreground,
+                scale,
+            )
+            _lever(
+                draw,
+                round(250 * scale),
+                round(950 * scale),
+                accent,
+                foreground,
+                scale,
+                pulled=progress > 0.48 if edit_profile == "kinetic" else False,
+            )
     elif template == "single_person_focus":
         draw.ellipse(
             (round(210 * scale), y_top, width - round(210 * scale), y_bottom),
             outline=(*_rgb(danger), 135),
             width=max(2, round(6 * scale)),
         )
-        _person(draw, cx, round(930 * scale), foreground, scale, large=True)
+        pulse = 1.0 + (0.08 * math.sin(progress * math.tau * 2) if edit_profile == "kinetic" else 0.0)
+        _person(draw, cx, round(930 * scale), foreground, scale, large=True, size_multiplier=pulse)
     elif template == "binary_choice_split":
-        _choice_panel(draw, round(80 * scale), round(680 * scale), round(500 * scale), y_bottom, "A", "引く", accent, fonts, scale)
-        _choice_panel(draw, round(580 * scale), round(680 * scale), width - round(80 * scale), y_bottom, "B", "引かない", muted, fonts, scale)
+        color_a = foreground
+        color_b = foreground
+        if edit_profile == "kinetic" and not is_pause:
+            if progress < 0.42:
+                color_a, color_b = accent, muted
+            elif progress < 0.76:
+                color_a, color_b = muted, accent
+        _choice_panel(draw, round(80 * scale), round(680 * scale), round(500 * scale), y_bottom, "A", "引く", color_a, fonts, scale)
+        _choice_panel(draw, round(580 * scale), round(680 * scale), width - round(80 * scale), y_bottom, "B", "引かない", color_b, fonts, scale)
+        if is_pause:
+            _center_text(draw, "いま決める", fonts.label, cx, round(1370 * scale), accent)
     elif template == "title_reveal":
         radius = round(250 * scale)
-        draw.ellipse((cx - radius, round(730 * scale), cx + radius, round(1230 * scale)), outline=accent, width=max(2, round(8 * scale)))
+        if edit_profile == "kinetic":
+            draw.arc(
+                (cx - radius, round(730 * scale), cx + radius, round(1230 * scale)),
+                -90,
+                -90 + round(360 * _ease(progress)),
+                fill=accent,
+                width=max(2, round(8 * scale)),
+            )
+        else:
+            draw.ellipse((cx - radius, round(730 * scale), cx + radius, round(1230 * scale)), outline=accent, width=max(2, round(8 * scale)))
         _center_text(draw, experiment.id, fonts.huge, cx, round(825 * scale), accent)
         _center_text(draw, experiment.title, fonts.body, cx, round(1080 * scale), foreground)
     elif template == "action_vs_inaction":
-        _lever(draw, round(270 * scale), round(970 * scale), accent, foreground, scale)
+        _lever(draw, round(270 * scale), round(970 * scale), accent, foreground, scale, pulled=progress > 0.5)
         draw.line((cx, round(720 * scale), cx, y_bottom), fill=(*_rgb(muted), 120), width=max(1, round(3 * scale)))
-        _center_text(draw, "行為", fonts.body, round(270 * scale), round(1190 * scale), accent)
-        _center_text(draw, "不作為", fonts.body, width - round(270 * scale), round(1190 * scale), muted)
+        left_color = accent if progress < 0.55 else muted
+        right_color = muted if progress < 0.55 else accent
+        _center_text(draw, "行為", fonts.body, round(270 * scale), round(1190 * scale), left_color)
+        _center_text(draw, "不作為", fonts.body, width - round(270 * scale), round(1190 * scale), right_color)
         _person(draw, width - round(270 * scale), round(900 * scale), foreground, scale, large=True)
     elif template == "condition_twist":
         positions = [(cx, 880, True), (cx - round(220 * scale), 1030, False), (cx + round(220 * scale), 1030, False)]
         for px, py, large in positions:
-            _person(draw, px, round(py * scale) if isinstance(py, int) else py, accent if large else foreground, scale, large=large)
+            pulse = 1.0 + (0.06 * math.sin(progress * math.tau * 2) if large and edit_profile == "kinetic" else 0.0)
+            _person(draw, px, round(py * scale) if isinstance(py, int) else py, accent if large else foreground, scale, large=large, size_multiplier=pulse)
         draw.arc((round(160 * scale), round(700 * scale), width - round(160 * scale), y_bottom), 205, 335, fill=(*_rgb(accent), 150), width=max(2, round(6 * scale)))
     elif template == "comment_cta":
-        _choice_panel(draw, round(100 * scale), round(720 * scale), round(490 * scale), round(1160 * scale), "A", "引く", accent, fonts, scale)
-        _choice_panel(draw, round(590 * scale), round(720 * scale), width - round(100 * scale), round(1160 * scale), "B", "引かない", muted, fonts, scale)
+        _choice_panel(draw, round(100 * scale), round(720 * scale), round(490 * scale), round(1160 * scale), "A", "引く", foreground, fonts, scale)
+        _choice_panel(draw, round(590 * scale), round(720 * scale), width - round(100 * scale), round(1160 * scale), "B", "引かない", foreground, fonts, scale)
         bubble = (round(280 * scale), round(1210 * scale), width - round(280 * scale), round(1350 * scale))
         draw.rounded_rectangle(bubble, radius=round(50 * scale), outline=foreground, width=max(2, round(4 * scale)))
         _center_text(draw, "理由をコメント", fonts.label, cx, round(1250 * scale), foreground)
@@ -352,8 +464,8 @@ def _trolley(draw, x, y, accent, foreground, scale) -> None:
         draw.ellipse((x + round(dx * scale) - round(18 * scale), y + h // 2 - round(4 * scale), x + round(dx * scale) + round(18 * scale), y + h // 2 + round(32 * scale)), fill=foreground)
 
 
-def _person(draw, x, y, color, scale, large=False) -> None:
-    factor = 1.45 if large else 1.0
+def _person(draw, x, y, color, scale, large=False, size_multiplier=1.0) -> None:
+    factor = (1.45 if large else 1.0) * size_multiplier
     r = round(30 * scale * factor)
     draw.ellipse((x - r, y - r * 2, x + r, y), fill=color)
     body_w = round(52 * scale * factor)
@@ -361,10 +473,12 @@ def _person(draw, x, y, color, scale, large=False) -> None:
     draw.rounded_rectangle((x - body_w // 2, y + round(8 * scale), x + body_w // 2, y + body_h), radius=round(20 * scale), fill=color)
 
 
-def _lever(draw, x, y, accent, foreground, scale) -> None:
+def _lever(draw, x, y, accent, foreground, scale, pulled=False) -> None:
     draw.rounded_rectangle((x - round(95 * scale), y + round(80 * scale), x + round(95 * scale), y + round(150 * scale)), radius=round(18 * scale), fill=foreground)
-    draw.line((x, y + round(90 * scale), x + round(90 * scale), y - round(120 * scale)), fill=accent, width=max(3, round(18 * scale)))
-    draw.ellipse((x + round(55 * scale), y - round(155 * scale), x + round(125 * scale), y - round(85 * scale)), fill=accent)
+    direction = -1 if pulled else 1
+    knob_x = x + direction * round(90 * scale)
+    draw.line((x, y + round(90 * scale), knob_x, y - round(120 * scale)), fill=accent, width=max(3, round(18 * scale)))
+    draw.ellipse((knob_x - round(35 * scale), y - round(155 * scale), knob_x + round(35 * scale), y - round(85 * scale)), fill=accent)
 
 
 def _choice_panel(draw, left, top, right, bottom, label, text, color, fonts, scale) -> None:
@@ -385,7 +499,7 @@ def _draw_subtitle(
     draw = ImageDraw.Draw(overlay)
     width, _ = image.size
     y = round(video.subtitle.position_y * scale)
-    bbox = draw.multiline_textbbox((0, 0), text, font=fonts.body, spacing=round(12 * scale), align="center", stroke_width=max(1, round(2 * scale)))
+    bbox = draw.multiline_textbbox((0, 0), text, font=fonts.subtitle, spacing=round(12 * scale), align="center", stroke_width=max(1, round(2 * scale)))
     text_w = bbox[2] - bbox[0]
     text_h = bbox[3] - bbox[1]
     pad_x, pad_y = round(45 * scale), round(28 * scale)
@@ -397,7 +511,7 @@ def _draw_subtitle(
     draw.multiline_text(
         (width // 2, y),
         text,
-        font=fonts.body,
+        font=fonts.subtitle,
         fill=video.palette.foreground,
         anchor="ma",
         align="center",
@@ -456,3 +570,8 @@ def _storyboard(scene_paths: list[Path], target: Path) -> None:
 def _rgb(value: str) -> tuple[int, int, int]:
     value = value.lstrip("#")
     return tuple(int(value[index : index + 2], 16) for index in (0, 2, 4))
+
+
+def _ease(value: float) -> float:
+    clamped = max(0.0, min(1.0, value))
+    return 1.0 - (1.0 - clamped) ** 3

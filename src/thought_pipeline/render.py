@@ -15,6 +15,7 @@ from .media import ffmpeg_executable, run_media_command
 from .models import GeneratedPackage
 from .quality import validate_generated_package
 from .repository import ProjectRepository
+from .soundbed import build_soundbed
 from .timeline import (
     build_srt,
     build_subtitle_cues,
@@ -55,7 +56,10 @@ def render_phase2(
     voice_mode: str = "auto",
     preview: bool = False,
     overwrite: bool = False,
+    edit_profile: str = "classic",
 ) -> RenderResult:
+    if edit_profile not in {"classic", "kinetic"}:
+        raise ConfigurationError(f"不明な編集プロファイルです: {edit_profile}")
     experiment = repository.experiment(experiment_id)
     output_dir = output_root / f"{experiment.id}_{experiment.slug}"
     script_path = output_dir / "script.json"
@@ -126,7 +130,16 @@ def render_phase2(
         output_dir=output_dir,
         project_root=repository.root,
         preview=preview,
+        edit_profile=edit_profile,
     )
+    soundbed = None
+    if edit_profile == "kinetic":
+        soundbed = build_soundbed(
+            timeline,
+            output_dir / "soundbed.wav",
+            voice_config.sample_rate_hz,
+            voice_config.channels,
+        )
     video_path = output_dir / video_name
     encode_video(
         visual=visual,
@@ -135,6 +148,7 @@ def render_phase2(
         total_duration_seconds=actual_duration,
         video_codec=video_config.render.video_codec,
         audio_bitrate=video_config.render.audio_bitrate,
+        soundbed_path=soundbed.path if soundbed else None,
     )
 
     _write_publish_caption(
@@ -153,6 +167,7 @@ def render_phase2(
             "actual_duration_seconds": round(actual_duration, 3),
             "duration_in_target_range": duration_in_target_range,
             "preview": preview,
+            "edit_profile": edit_profile,
             "video": {
                 "path": video_path.name,
                 "width": visual.width,
@@ -163,6 +178,11 @@ def render_phase2(
             "font": str(visual.font_path),
             "artifacts": [
                 *PHASE2_ARTIFACT_NAMES,
+                *(
+                    ["soundbed.wav", "soundbed_manifest.json"]
+                    if soundbed
+                    else []
+                ),
                 video_path.name,
                 "visuals/",
                 "audio/scenes/",
@@ -190,27 +210,47 @@ def encode_video(
     total_duration_seconds: float,
     video_codec: str,
     audio_bitrate: str,
+    soundbed_path: Path | None = None,
 ) -> None:
     if total_duration_seconds <= 0:
         raise GenerationError("動画尺が0秒以下です")
-    run_media_command(
+    command = [
+        ffmpeg_executable(),
+        "-y",
+        "-loglevel",
+        "error",
+        "-f",
+        "concat",
+        "-safe",
+        "0",
+        "-i",
+        str(visual.concat_path),
+        "-i",
+        str(track.voice_path),
+    ]
+    if soundbed_path:
+        command.extend(["-i", str(soundbed_path)])
+    command.extend(
         [
-            ffmpeg_executable(),
-            "-y",
-            "-loglevel",
-            "error",
-            "-f",
-            "concat",
-            "-safe",
-            "0",
-            "-i",
-            str(visual.concat_path),
-            "-i",
-            str(track.voice_path),
             "-vf",
             f"fps={visual.fps}",
-            "-af",
-            "apad",
+        ]
+    )
+    if soundbed_path:
+        command.extend(
+            [
+                "-filter_complex",
+                "[1:a][2:a]amix=inputs=2:duration=first:dropout_transition=0:weights='1 0.8':normalize=0,alimiter=limit=0.84:level=0[a]",
+                "-map",
+                "0:v:0",
+                "-map",
+                "[a]",
+            ]
+        )
+    else:
+        command.extend(["-af", "apad"])
+    command.extend(
+        [
             "-t",
             f"{total_duration_seconds:.3f}",
             "-c:v",
@@ -230,6 +270,7 @@ def encode_video(
             str(target),
         ]
     )
+    run_media_command(command)
 
 
 def _write_publish_caption(source: Path, target: Path, disclosure: str) -> None:

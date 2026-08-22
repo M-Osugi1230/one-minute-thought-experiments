@@ -8,10 +8,10 @@ safe_area:
   bottom: 300
   left: 90
 subtitle:
-  max_chars_per_line: 18
+  max_chars_per_line: 16
   max_lines: 2
-  position_y: 1430
-  font_size: 68
+  position_y: 1370
+  font_size: 60
 timeline:
   default_gap_seconds: 0.0
   subtitle_lead_in_seconds: 0.0

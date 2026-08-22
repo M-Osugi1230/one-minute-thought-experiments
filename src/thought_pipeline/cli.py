@@ -14,13 +14,14 @@ from pydantic import ValidationError
 from .core import Pipeline
 from .errors import PipelineError
 from .models import GeneratedPackage
+from .pdca import build_pdca_packet
 from .providers import OfflineGoldenProvider, OpenAIStructuredProvider
 from .quality import validate_generated_package
 from .render import render_phase2
 from .repository import ProjectRepository
 
 
-COMMANDS = {"generate", "render", "validate", "list", "prompt"}
+COMMANDS = {"generate", "render", "validate", "list", "prompt", "pdca"}
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -39,6 +40,10 @@ def _parser() -> argparse.ArgumentParser:
     )
     generate.add_argument("--overwrite", action="store_true", help="既存成果物を上書き")
     generate.add_argument("--output-root", type=Path, help="出力ルートを変更")
+    generate.add_argument(
+        "--variant",
+        help="オフライン比較台本の名前（例: fast44）。出力はvariants配下へ分離",
+    )
 
     render = subparsers.add_parser("render", help="音声・実測字幕・縦型動画を生成")
     render.add_argument("experiment_id", help="例: 001")
@@ -55,15 +60,30 @@ def _parser() -> argparse.ArgumentParser:
     )
     render.add_argument("--overwrite", action="store_true", help="既存成果物を上書き")
     render.add_argument("--output-root", type=Path, help="出力ルートを変更")
+    render.add_argument(
+        "--variant",
+        help="比較台本の名前（例: fast44）。generateと同じvariantを指定",
+    )
+    render.add_argument(
+        "--edit-profile",
+        choices=("classic", "kinetic"),
+        help="映像編集方式。variant=fast44ではkineticが既定",
+    )
 
     validate = subparsers.add_parser("validate", help="設定・Fact Pack・生成物を検証")
     validate.add_argument("--experiment", help="特定IDだけを検証")
     validate.add_argument("--generated", type=Path, help="任意のscript.jsonを追加検証")
+    validate.add_argument("--variant", help="比較台本の名前（例: fast44）")
 
     subparsers.add_parser("list", help="登録済み思考実験を一覧表示")
 
     prompt = subparsers.add_parser("prompt", help="APIへ送るプロンプトを表示")
     prompt.add_argument("experiment_id", help="例: 001")
+
+    pdca = subparsers.add_parser("pdca", help="現行版と改善版の比較資料を生成")
+    pdca.add_argument("experiment_id", help="例: 001")
+    pdca.add_argument("--variant", required=True, help="比較台本の名前（例: fast44）")
+    pdca.add_argument("--output-root", type=Path, help="出力ルートを変更")
     return parser
 
 
@@ -87,6 +107,8 @@ def main(argv: list[str] | None = None) -> int:
             return _list(repository)
         if args.command == "prompt":
             return _prompt(args, repository)
+        if args.command == "pdca":
+            return _pdca(args, repository)
     except (PipelineError, ValidationError, json.JSONDecodeError) as exc:
         print(f"エラー: {exc}", file=sys.stderr)
         return 2
@@ -97,7 +119,7 @@ def _generate(args: argparse.Namespace, repository: ProjectRepository) -> int:
     experiment = repository.experiment(args.experiment_id)
     llm = repository.llm()
     provider = (
-        OfflineGoldenProvider(repository.root)
+        OfflineGoldenProvider(repository.root, args.variant)
         if args.offline
         else OpenAIStructuredProvider(llm)
     )
@@ -126,7 +148,7 @@ def _render(args: argparse.Namespace, repository: ProjectRepository) -> int:
         print("Phase 1成果物がないため、オフライン合格サンプルから先に生成します。")
         Pipeline(repository).run(
             experiment.id,
-            OfflineGoldenProvider(repository.root),
+            OfflineGoldenProvider(repository.root, args.variant),
             output_root=output_root,
             overwrite=False,
         )
@@ -138,6 +160,7 @@ def _render(args: argparse.Namespace, repository: ProjectRepository) -> int:
         voice_mode=args.voice_provider,
         preview=args.preview,
         overwrite=args.overwrite,
+        edit_profile=args.edit_profile or ("kinetic" if args.variant == "fast44" else "classic"),
     )
     mode = "軽量プレビュー" if args.preview else "投稿解像度"
     print(f"動画生成完了: {experiment.title} ({mode})")
@@ -161,16 +184,28 @@ def _validate(args: argparse.Namespace, repository: ProjectRepository) -> int:
 
     errors = 0
     for experiment in experiments:
-        golden_path = repository.root / "content" / "golden" / f"{experiment.id}.json"
+        golden_root = repository.root / "content" / "golden"
+        if args.variant:
+            golden_root = golden_root / "variants" / args.variant
+        golden_path = golden_root / f"{experiment.id}.json"
         if golden_path.is_file():
-            package = OfflineGoldenProvider(repository.root).generate(
+            package = OfflineGoldenProvider(repository.root, args.variant).generate(
                 experiment.id,
                 Pipeline(repository).prompt(experiment.id),
             )
-            report = validate_generated_package(package, experiment, repository.brand())
-            errors += _print_report(f"{experiment.id} {experiment.title}", report)
+            report = validate_generated_package(
+                package,
+                experiment,
+                repository.brand(),
+            )
+            variant_label = f" [{args.variant}]" if args.variant else ""
+            errors += _print_report(
+                f"{experiment.id} {experiment.title}{variant_label}",
+                report,
+            )
         else:
-            print(f"OK  {experiment.id} {experiment.title} (Fact Pack)")
+            suffix = f" / variant={args.variant}未登録" if args.variant else ""
+            print(f"OK  {experiment.id} {experiment.title} (Fact Pack{suffix})")
 
     if args.generated:
         path = args.generated
@@ -212,10 +247,29 @@ def _prompt(args: argparse.Namespace, repository: ProjectRepository) -> int:
     return 0
 
 
+def _pdca(args: argparse.Namespace, repository: ProjectRepository) -> int:
+    output_root = args.output_root or Path(os.getenv("OUTPUT_ROOT", "output"))
+    if not output_root.is_absolute():
+        output_root = repository.root / output_root
+    result = build_pdca_packet(
+        repository,
+        args.experiment_id,
+        args.variant,
+        output_root,
+    )
+    print("PDCA比較資料を生成しました。")
+    print(f"レビュー: {result.report_path}")
+    print(f"計測表: {result.log_path}")
+    return 0
+
+
 def _output_root(args: argparse.Namespace, repository: ProjectRepository) -> Path:
     output_root = args.output_root or Path(os.getenv("OUTPUT_ROOT", "output"))
     if not output_root.is_absolute():
         output_root = repository.root / output_root
+    variant = getattr(args, "variant", None)
+    if variant:
+        output_root = output_root / "variants" / variant
     return output_root
 
 

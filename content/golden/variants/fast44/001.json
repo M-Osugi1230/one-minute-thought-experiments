@@ -1,0 +1,112 @@
+{
+  "schema_version": "1.0",
+  "experiment_id": "001",
+  "experiment_title": "トロッコ問題",
+  "working_title": "5人か、1人か。答えは条件ひとつで変わりますか？",
+  "hook_options": [
+    {
+      "narration": "暴走する列車の先に5人。あなたはレバーの前にいます。",
+      "screen_text": "5人か、1人か\nあなたが決める",
+      "angle": "危機と視聴者の役割を最初の一文で同時に示す"
+    },
+    {
+      "narration": "何もしなければ5人。レバーを引けば1人。あなたはどうしますか？",
+      "screen_text": "何もしない5人\n引けば1人",
+      "angle": "両方の結果を同じ文型で中立に提示する"
+    },
+    {
+      "narration": "あなたの手元に、5人と1人の運命を変えるレバーがあります。",
+      "screen_text": "このレバーを\n引けますか？",
+      "angle": "視聴者の行為と責任を前面に出す"
+    }
+  ],
+  "selected_hook_index": 0,
+  "scenes": [
+    {
+      "id": 1,
+      "purpose": "hook",
+      "narration": "暴走する列車の先に5人。あなたはレバーの前にいます。",
+      "screen_text": "5人か、1人か\nあなたが決める",
+      "visual_description": "接近する列車、右側の5人、左側の1人を最初の2秒で同時に見せる",
+      "visual_template": "dramatic_question",
+      "emphasis_words": ["5人", "1人", "あなた"],
+      "duration_seconds": 4.5,
+      "pause_after_seconds": 0.0
+    },
+    {
+      "id": 2,
+      "purpose": "scenario",
+      "narration": "引けば5人は助かる。でも、別の線路の1人が助かりません。",
+      "screen_text": "A 引く｜1人犠牲\nB 引かない｜5人犠牲",
+      "visual_description": "レバーを動かし、両方の線路に同じ明るさで結果を表示する",
+      "visual_template": "lever_switch",
+      "emphasis_words": ["1人", "5人"],
+      "duration_seconds": 5.0,
+      "pause_after_seconds": 0.0
+    },
+    {
+      "id": 3,
+      "purpose": "choice",
+      "narration": "A、引く。1人が助からない。B、引かない。5人が助からない。今、決めてください。",
+      "screen_text": "A 引く｜1人犠牲\nB 引かない｜5人犠牲",
+      "visual_description": "AとBを同じ大きさ、同じ明るさで表示し、説明中だけ順番に強調する",
+      "visual_template": "binary_choice_split",
+      "emphasis_words": ["A", "B", "今"],
+      "duration_seconds": 6.5,
+      "pause_after_seconds": 1.5
+    },
+    {
+      "id": 4,
+      "purpose": "reveal",
+      "narration": "これが、トロッコ問題です。",
+      "screen_text": "#001 トロッコ問題\n論点：行為と不作為",
+      "visual_description": "線路を止めず、短いタイトルと論点を重ねて表示する",
+      "visual_template": "title_reveal",
+      "emphasis_words": ["トロッコ問題"],
+      "duration_seconds": 2.2,
+      "pause_after_seconds": 0.0
+    },
+    {
+      "id": 5,
+      "purpose": "insight",
+      "narration": "何もしない結果と、自分で選んだ結果は同じでしょうか。あなたが責任を負う境界は、どこですか？",
+      "screen_text": "何もしない結果と\n自分で選んだ結果",
+      "visual_description": "行為と不作為を左右へ同格に置き、交互に焦点を移す",
+      "visual_template": "action_vs_inaction",
+      "emphasis_words": ["結果", "責任", "境界"],
+      "duration_seconds": 7.5,
+      "pause_after_seconds": 0.0
+    },
+    {
+      "id": 6,
+      "purpose": "second_question",
+      "narration": "では、その1人があなたの家族だったら。それでも引きますか？",
+      "screen_text": "その1人が家族なら？\nA 引く / B 引かない",
+      "visual_description": "1人を家族の輪郭へ変え、もう一度選択する間を置く",
+      "visual_template": "condition_twist",
+      "emphasis_words": ["家族", "それでも"],
+      "duration_seconds": 5.0,
+      "pause_after_seconds": 1.2
+    },
+    {
+      "id": 7,
+      "purpose": "cta",
+      "narration": "最終回答はAかB。最初と変わった人は矢印と、理由を一言で教えてください。",
+      "screen_text": "最初 → 最後は？\nA / B ＋ 理由ひとこと",
+      "visual_description": "中立なA/Bカードと回答変化を示す矢印を表示し、冒頭の線路へつなぐ",
+      "visual_template": "comment_cta",
+      "emphasis_words": ["最終回答", "矢印", "理由"],
+      "duration_seconds": 6.7,
+      "pause_after_seconds": 0.0
+    }
+  ],
+  "caption": "何もしなければ5人。引けば1人。その1人が家族なら、最初の答えは変わりますか？ 最初→最後と、その理由を一言で教えてください。",
+  "pinned_comment": "回答例：A→B『家族なら引けない』／A→A『人数を優先する』。最初と最後の答えを教えてください。",
+  "hashtags": ["思考実験", "トロッコ問題", "哲学", "あなたならどうする", "1分思考実験"],
+  "editorial_notes": [
+    "AとBは最終選択時に同じ色、同じ大きさ、同じ明るさへ戻す",
+    "最初の選択と家族条件の選択ではBGMを落とし、回答時間を明確にする",
+    "タイトルは独立した長いカードにせず、1.5〜2秒で論点まで表示する",
+    "最後のレール音と冒頭のレール音をつなぎ、自然なループを作る"
+  ]
+}

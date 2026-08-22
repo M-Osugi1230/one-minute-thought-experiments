@@ -4,6 +4,8 @@
 
 現在はトロッコ問題 `001` について、macOSならAPIキーなしでもナレーション入りの確認用MP4まで生成できます。
 
+競合比較から作った `fast44` 改善版では、約41秒への短縮、条件変更の前倒し、中立なA/B表示、意味のある動き、ライセンス不要の自動生成BGM/SE、投稿後のPDCA記録まで確認できます。現行版は上書きせず、比較用の別フォルダへ出力します。
+
 ## 現在の到達点
 
 ```text
@@ -39,6 +41,14 @@ LLM部分はOpenAI Responses APIのStructured OutputsでPydanticスキーマへ�
 - AI生成音声の表示と投稿文への開示文追加
 - 同一台本・同一音声設定を再利用するシーンキャッシュ
 
+### Phase 3：比較・PDCA
+
+- 現行版と改善版を別フォルダで保持
+- 予定尺・実測尺・名称公開・条件変更・回答時間・文字量を自動比較
+- 仮説、投稿前チェック、採否基準をMarkdownとJSONへ出力
+- 公開2時間後・48時間後の実績を記録するCSVを自動作成
+- 改善版のA/Bを停止画面では同じ面積・明るさへ戻し、回答誘導を抑制
+
 OpenAI音声は公式の [Text to speechガイド](https://developers.openai.com/api/docs/guides/text-to-speech) に沿って `gpt-4o-mini-tts`、WAV、`cedar` を既定にしています。
 
 ## 必要環境
@@ -58,6 +68,9 @@ python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install -r requirements.txt
 python pipeline.py validate
+
+# fast44改善版だけを品質検証
+python pipeline.py validate --experiment 001 --variant fast44
 python pipeline.py 001 --offline
 ```
 
@@ -74,6 +87,27 @@ python pipeline.py render 001 --voice-provider silent --preview
 ```
 
 同じ設定の音声はシーン単位で再利用されます。字幕や色だけを調整した再書き出しでは、音声を作り直しません。
+
+## 競合分析反映版 `fast44` を確認する
+
+現行版を残したまま、短尺・動的編集版を生成します。
+
+```bash
+python pipeline.py generate 001 --offline --variant fast44 --overwrite
+python pipeline.py render 001 --variant fast44 --edit-profile kinetic --voice-provider system --preview --overwrite
+python pipeline.py pdca 001 --variant fast44
+```
+
+主な出力先は次の通りです。
+
+```text
+output/variants/fast44/001_trolley_problem/draft_preview.mp4
+output/variants/fast44/001_trolley_problem/storyboard.jpg
+output/pdca/001_fast44/review.md
+output/pdca/001_fast44/performance_log.csv
+```
+
+`kinetic` 編集は、列車・レバー・人物の意味に沿った動きと、低い環境音・レバー音・心拍・衝撃音を決定論的に生成します。外部の楽曲や効果音素材を使わないため、確認版の権利関係を単純に保てます。
 
 ## OpenAI APIで台本と音声を生成する
 
@@ -135,6 +169,9 @@ python pipeline.py render 001 --voice-provider system --preview
 # 無音の軽量動画
 python pipeline.py render 001 --voice-provider silent --preview
 
+# 現行版とfast44のPDCA比較資料・計測表を生成
+python pipeline.py pdca 001 --variant fast44
+
 # 任意のLLM生成済みscript.jsonを再検証
 python pipeline.py validate --generated output/001_trolley_problem/script.json
 
@@ -168,6 +205,9 @@ output/001_trolley_problem/
 ├── render_manifest.json    # Phase 2生成条件
 ├── draft_preview.mp4       # 540×960・15fps確認用動画
 └── draft.mp4               # 1080×1920・30fps投稿用動画
+
+output/variants/fast44/      # 現行版を壊さない改善版の成果物
+output/pdca/001_fast44/      # 比較レポート、JSON、実績記録CSV
 ```
 
 ## リポジトリ構成
@@ -207,6 +247,10 @@ pipeline.py              # 実行入口
 - 選択後に名称を公開する
 - 家族という条件を第二の問いに含める
 - 第二の問いの後にA/Bと理由を求める
+- CTAで最初と最後の回答変化を回収できる
+- 名称公開だけのシーンが3秒を超えない
+- 第二の問いが全体の72%より前に始まる
+- 予定読み上げ密度が毎秒7文字を超えない
 - Fact PackのIDとタイトルが一致する
 - 音声実測尺が目標範囲かをmanifestへ記録する
 - 空音声を検知し、macOS音声は最大3回再試行する
@@ -220,4 +264,4 @@ pipeline.py              # 実行入口
 5. `python pipeline.py 002` で台本を生成します。
 6. `python pipeline.py render 002 --preview` で動画化します。
 
-次の拡張候補は、BGM/SEの仮配置、POV・ミステリー専用図解、投稿用カバー生成、Google Sheetsからのテーマ投入です。
+次の拡張候補は、POV・ミステリー専用図解、投稿用カバー生成、実績CSVからの自動評価、Google Sheetsからのテーマ投入です。
