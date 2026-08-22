@@ -8,6 +8,8 @@ def test_all_repository_configuration_is_valid() -> None:
     assert [experiment.id for experiment in experiments] == ["001"]
     assert experiments[0].slug == "trolley_problem"
     assert repository.video().canvas.width == 1080
+    assert repository.video().render.preview_scale == 0.5
+    assert repository.voice().model == "gpt-4o-mini-tts"
 
 
 def test_prompt_contains_fact_pack_and_brand_rules() -> None:

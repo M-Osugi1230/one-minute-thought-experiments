@@ -16,3 +16,16 @@ timeline:
   default_gap_seconds: 0.0
   subtitle_lead_in_seconds: 0.0
   subtitle_tail_seconds: 0.0
+palette:
+  background: "#08090D"
+  background_alt: "#151722"
+  foreground: "#F5F1E8"
+  muted: "#9B9AA1"
+  accent: "#D4AF37"
+  danger: "#B84444"
+render:
+  preview_scale: 0.5
+  preview_fps: 15
+  subtitle_box_opacity: 210
+  video_codec: "libx264"
+  audio_bitrate: "192k"

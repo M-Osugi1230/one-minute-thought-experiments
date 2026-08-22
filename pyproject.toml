@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "one-minute-thought-experiments"
-version = "0.1.0"
+version = "0.2.0"
 description = "Semi-automated short-video production pipeline for 1-minute thought experiments"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -13,6 +13,8 @@ dependencies = [
   "pydantic>=2.10.0,<3.0.0",
   "PyYAML>=6.0.2,<7.0.0",
   "python-dotenv>=1.0.1,<2.0.0",
+  "Pillow>=11.3.0,<13.0.0",
+  "imageio-ffmpeg>=0.6.0,<1.0.0",
 ]
 
 [project.optional-dependencies]

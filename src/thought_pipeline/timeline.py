@@ -22,15 +22,36 @@ class TimelineScene:
         return asdict(self)
 
 
+@dataclass(frozen=True)
+class SubtitleCue:
+    start_seconds: float
+    end_seconds: float
+    text: str
+
+
 def build_timeline(
     package: GeneratedPackage,
+    video: VideoConfig,
+) -> list[TimelineScene]:
+    durations = {scene.id: scene.duration_seconds for scene in package.scenes}
+    return build_timeline_from_durations(package, durations, video)
+
+
+def build_timeline_from_durations(
+    package: GeneratedPackage,
+    narration_durations: dict[int, float],
     video: VideoConfig,
 ) -> list[TimelineScene]:
     cursor = 0.0
     result: list[TimelineScene] = []
     for scene in package.scenes:
+        if scene.id not in narration_durations:
+            raise ValueError(f"missing narration duration for scene {scene.id}")
+        duration = narration_durations[scene.id]
+        if duration <= 0:
+            raise ValueError(f"narration duration must be positive for scene {scene.id}")
         start = cursor
-        narration_end = start + scene.duration_seconds
+        narration_end = start + duration
         pause_end = narration_end + scene.pause_after_seconds
         result.append(
             TimelineScene(
@@ -39,7 +60,7 @@ def build_timeline(
                 start_seconds=round(start, 3),
                 narration_end_seconds=round(narration_end, 3),
                 pause_end_seconds=round(pause_end, 3),
-                duration_seconds=scene.duration_seconds,
+                duration_seconds=round(duration, 3),
                 pause_after_seconds=scene.pause_after_seconds,
             )
         )
@@ -52,7 +73,22 @@ def build_srt(
     timeline: list[TimelineScene],
     video: VideoConfig,
 ) -> str:
-    cues: list[tuple[float, float, str]] = []
+    cues = build_subtitle_cues(package, timeline, video)
+
+    blocks = []
+    for index, cue in enumerate(cues, start=1):
+        blocks.append(
+            f"{index}\n{_srt_time(cue.start_seconds)} --> {_srt_time(cue.end_seconds)}\n{cue.text}"
+        )
+    return "\n\n".join(blocks) + "\n"
+
+
+def build_subtitle_cues(
+    package: GeneratedPackage,
+    timeline: list[TimelineScene],
+    video: VideoConfig,
+) -> list[SubtitleCue]:
+    cues: list[SubtitleCue] = []
     chars_per_cue = (
         video.subtitle.max_chars_per_line * video.subtitle.max_lines
     )
@@ -69,18 +105,14 @@ def build_srt(
             weight = max(1, len(_compact(chunk))) / total_chars
             end = available_end if index == len(chunks) - 1 else cursor + available * weight
             cues.append(
-                (
-                    cursor,
-                    end,
-                    _wrap_lines(chunk, video.subtitle.max_chars_per_line),
+                SubtitleCue(
+                    start_seconds=round(cursor, 3),
+                    end_seconds=round(end, 3),
+                    text=_wrap_lines(chunk, video.subtitle.max_chars_per_line),
                 )
             )
             cursor = end
-
-    blocks = []
-    for index, (start, end, text) in enumerate(cues, start=1):
-        blocks.append(f"{index}\n{_srt_time(start)} --> {_srt_time(end)}\n{text}")
-    return "\n\n".join(blocks) + "\n"
+    return cues
 
 
 def _compact(text: str) -> str:
@@ -115,13 +147,13 @@ def _wrap_lines(text: str, width: int) -> str:
             lines.append(compact)
             break
         cut = width
-        punctuation_cuts = [
+        preferred_cuts = [
             index + 1
             for index, char in enumerate(compact[:width])
-            if char in "、。！？!?」』）"
+            if char in "、。！？!?」』）はがをにでともへ"
         ]
-        if punctuation_cuts and punctuation_cuts[-1] >= max(4, int(width * 0.55)):
-            cut = punctuation_cuts[-1]
+        if preferred_cuts and preferred_cuts[-1] >= max(4, int(width * 0.5)):
+            cut = preferred_cuts[-1]
         tail_length = len(compact) - cut
         minimum_tail = max(4, width // 4)
         if 0 < tail_length < minimum_tail:

@@ -1,38 +1,53 @@
 # 1分思考実験｜半自動動画生成パイプライン
 
-思考実験のFact Packから、縦型ショート動画の台本と編集前素材を生成するPythonパイプラインです。
+思考実験のFact Packから、縦型ショート動画の台本、ナレーション、実測字幕、図解映像、投稿素材までを生成するPythonパイプラインです。
 
-Phase 1では、テーマID `001` を指定すると次を自動生成します。
-
-- 構造化台本とHook 3案
-- シーン構成と予定タイムライン
-- ナレーション原稿
-- 仮タイミングのSRT字幕
-- 投稿文と固定コメント
-- 入力・モデル・品質検証結果を記録したmanifest
-
-LLMを使う部分はOpenAI Responses APIのStructured OutputsでPydanticスキーマに直接変換します。形式が正しくてもブランドルールに違反する出力は、後段の品質検証で停止します。
+現在はトロッコ問題 `001` について、macOSならAPIキーなしでもナレーション入りの確認用MP4まで生成できます。
 
 ## 現在の到達点
-
-Phase 1は、APIキーなしで全工程を確認できるオフライン経路を含みます。
 
 ```text
 Fact Pack (YAML)
   → ブランドルールとプロンプトを合成
-  → LLM Structured Outputs / ゴールデンサンプル
-  → Pydantic構造検証
-  → 尺・Hook・A/B・名称公開順・第二の問い・CTAを品質検証
-  → 台本・シーン・字幕・投稿素材を出力
+  → OpenAI Structured Outputs / オフライン合格サンプル
+  → Pydantic構造検証と編集品質チェック
+  → シーン単位TTS
+  → 音声の実測秒数でタイムラインと字幕を再構築
+  → 9:16の図解・字幕フレームを決定論的に描画
+  → H.264/AACのMP4、絵コンテ、投稿素材を出力
 ```
 
-音声、実測タイミング、映像レンダリングはPhase 2です。Phase 1の `timeline.json` と `subtitles.srt` は予定尺ベースで、後からシーン単位のTTS実測時間へ置き換えられる構造になっています。
+### Phase 1：台本・編集素材
+
+- 構造化台本とHook 3案
+- シーン構成と予定タイムライン
+- ナレーション原稿
+- 予定時刻ベースのSRT字幕
+- 投稿文と固定コメント
+- 入力・モデル・品質検証結果を記録したmanifest
+
+LLM部分はOpenAI Responses APIのStructured OutputsでPydanticスキーマへ直接変換します。形式が正しくてもブランドルールに違反する出力は後段の品質検証で停止します。
+
+### Phase 2：音声・実測字幕・動画
+
+- OpenAI音声、macOS内蔵音声、無音の3経路
+- シーン単位のWAV生成と音量正規化
+- 実際の音声長に追従するタイムラインとSRT
+- 黒・白・金を基調にした1080×1920図解
+- 字幕を焼き込んだMP4
+- 9シーンを一覧できる絵コンテ
+- AI生成音声の表示と投稿文への開示文追加
+- 同一台本・同一音声設定を再利用するシーンキャッシュ
+
+OpenAI音声は公式の [Text to speechガイド](https://developers.openai.com/api/docs/guides/text-to-speech) に沿って `gpt-4o-mini-tts`、WAV、`cedar` を既定にしています。
 
 ## 必要環境
 
 - Python 3.11以上
-- OpenAI APIキー（実LLM生成時のみ）
-- FFmpeg（Phase 2以降。Phase 1では不要）
+- macOS内蔵日本語音声、またはOpenAI APIキー（ナレーション用）
+- OpenAI APIキー（実LLM台本生成時）
+
+FFmpegは `imageio-ffmpeg` の配布バイナリを使うため、通常は別途インストール不要です。
 
 ## 最短セットアップ
 
@@ -46,9 +61,21 @@ python pipeline.py validate
 python pipeline.py 001 --offline
 ```
 
-成功すると `output/001_trolley_problem/` に9ファイルが作られます。
+macOSでは、次のコマンドでAPI料金を使わずナレーション入り軽量プレビューを生成できます。
 
-## OpenAI APIで台本を生成する
+```bash
+python pipeline.py render 001 --voice-provider system --preview
+```
+
+生成先は `output/001_trolley_problem/draft_preview.mp4` です。Linuxなど日本語システム音声がない環境では、まず無音版で映像工程を確認できます。
+
+```bash
+python pipeline.py render 001 --voice-provider silent --preview
+```
+
+同じ設定の音声はシーン単位で再利用されます。字幕や色だけを調整した再書き出しでは、音声を作り直しません。
+
+## OpenAI APIで台本と音声を生成する
 
 1. 環境変数例をコピーします。
 
@@ -58,21 +85,33 @@ python pipeline.py 001 --offline
 
 2. `.env` の `OPENAI_API_KEY` に自分のAPIキーを設定します。`.env` はGitの対象外です。
 
-3. 実行します。
+3. 構造化台本を生成します。
 
    ```bash
-   python pipeline.py 001
+   python pipeline.py 001 --overwrite
    ```
 
-既定モデルは `gpt-5.4-mini` です。変更する場合は `.env` の `OPENAI_MODEL` を更新してください。実装は、OpenAI公式ドキュメントの [Responses API](https://developers.openai.com/api/reference/python/resources/responses) と [Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs) に沿っています。
+4. OpenAI音声で確認用動画を生成します。
 
-既存成果物を意図的に更新する場合だけ、次を使います。
+   ```bash
+   python pipeline.py render 001 --voice-provider openai --preview --overwrite
+   ```
+
+台本生成の既定モデルは `gpt-5.4-mini` です。変更する場合は `.env` の `OPENAI_MODEL` を更新してください。実装はOpenAI公式の [Responses API](https://developers.openai.com/api/reference/python/resources/responses) と [Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs) に沿っています。
+
+`--voice-provider auto` は、APIキーがあればOpenAI音声、なければmacOS内蔵音声、どちらも使えなければ無音を選びます。意図しないAPI利用を避けたい確認段階では `system` または `silent` を明示してください。
+
+## 投稿解像度で書き出す
+
+`--preview` を外すと、1080×1920・30fpsの `draft.mp4` を生成します。
 
 ```bash
-python pipeline.py 001 --offline --overwrite
+python pipeline.py render 001 --voice-provider openai --overwrite
 ```
 
-## コマンド
+公開前には必ず、人間が台本の事実、音声、字幕、セーフエリア、投稿文を確認してください。TikTok等への自動投稿は初期スコープに含めていません。
+
+## 主なコマンド
 
 ```bash
 # 登録テーマ一覧
@@ -84,11 +123,17 @@ python pipeline.py validate
 # APIへ送るsystem/userプロンプトを確認（API呼び出しなし）
 python pipeline.py prompt 001
 
-# APIなしで成果物を生成
+# APIなしでPhase 1成果物を生成
 python pipeline.py generate 001 --offline
 
 # generateは省略可能
 python pipeline.py 001 --offline
+
+# APIなしのナレーション入り軽量動画（macOS）
+python pipeline.py render 001 --voice-provider system --preview
+
+# 無音の軽量動画
+python pipeline.py render 001 --voice-provider silent --preview
 
 # 任意のLLM生成済みscript.jsonを再検証
 python pipeline.py validate --generated output/001_trolley_problem/script.json
@@ -97,22 +142,33 @@ python pipeline.py validate --generated output/001_trolley_problem/script.json
 python -m pytest
 ```
 
+既存成果物を意図的に更新するときだけ `--overwrite` を指定します。
+
 ## 出力
 
 ```text
 output/001_trolley_problem/
-├── script.json          # LLM構造化出力の正本
-├── script.md            # 人間がレビューしやすい台本
-├── narration.txt        # TTS入力用の連結原稿
-├── scenes.json          # 各シーンと予定時刻
-├── timeline.json        # Phase 2が差し替える時間情報
-├── subtitles.srt        # 予定時刻ベースの仮字幕
-├── caption.txt          # ハッシュタグ込み投稿文
-├── pinned_comment.txt   # 固定コメント
-└── manifest.json        # 生成条件、入力ハッシュ、品質結果
+├── script.json             # LLM構造化出力の正本
+├── script.md               # 人間がレビューしやすい台本
+├── narration.txt           # TTS入力用の連結原稿
+├── scenes.json             # 各シーンと予定時刻
+├── timeline.json           # 予定尺ベースの時間情報
+├── subtitles.srt           # 予定尺ベースの仮字幕
+├── caption.txt             # ハッシュタグ込み投稿文
+├── pinned_comment.txt      # 固定コメント
+├── manifest.json           # Phase 1生成条件と品質結果
+├── audio/scenes/           # シーン単位WAVとキャッシュ情報
+├── voice.wav               # 間を含む結合済みナレーション
+├── audio_manifest.json     # 音声設定とシーン別実測秒数
+├── timeline_actual.json    # 音声実測ベースの時間情報
+├── subtitles_actual.srt    # 音声実測ベースの字幕
+├── visuals/                # シーンカード、字幕フレーム、FFmpeg入力
+├── storyboard.jpg          # 全シーン一覧
+├── publish_caption.txt     # 音声開示文を含む投稿用文面
+├── render_manifest.json    # Phase 2生成条件
+├── draft_preview.mp4       # 540×960・15fps確認用動画
+└── draft.mp4               # 1080×1920・30fps投稿用動画
 ```
-
-同じ出力先が存在する場合、誤上書きを避けるため処理は停止します。更新時は `--overwrite` が必要です。
 
 ## リポジトリ構成
 
@@ -123,9 +179,9 @@ content/
 ├── experiments/         # 事実と論点を持つFact Pack
 └── golden/              # APIなしで使う合格基準の構造化台本
 templates/               # POV / 二択 / ミステリーの表現テンプレート
-assets/                  # フォント、アイコン、BGM、SE（実素材はGit対象外）
-src/thought_pipeline/    # 生成、検証、タイムライン、出力処理
-tests/                   # オフライン自動テスト
+assets/                  # フォント、アイコン、BGM、SE
+src/thought_pipeline/    # 生成、検証、音声、字幕、映像処理
+tests/                   # APIなしの自動テスト
 pipeline.py              # 実行入口
 ```
 
@@ -143,8 +199,6 @@ pipeline.py              # 実行入口
 
 ## 自動品質チェック
 
-生成直後に少なくとも次を検査します。
-
 - 予定尺が40〜55秒に収まる
 - Hookが3案あり、本命と第1シーンが一致する
 - 冒頭に「トロッコ問題」「思考実験」「哲学」を出さない
@@ -154,8 +208,8 @@ pipeline.py              # 実行入口
 - 家族という条件を第二の問いに含める
 - 第二の問いの後にA/Bと理由を求める
 - Fact PackのIDとタイトルが一致する
-
-失敗時は動画素材を出力せず、違反コードと場所を表示します。
+- 音声実測尺が目標範囲かをmanifestへ記録する
+- 空音声を検知し、macOS音声は最大3回再試行する
 
 ## 新しい思考実験を追加する
 
@@ -163,19 +217,7 @@ pipeline.py              # 実行入口
 2. `content/experiments.yaml` にID、slug、パス、テンプレートを登録します。
 3. `python pipeline.py validate` でFact Packを検証します。
 4. `python pipeline.py prompt 002` でプロンプトを確認します。
-5. `python pipeline.py 002` で生成します。
+5. `python pipeline.py 002` で台本を生成します。
+6. `python pipeline.py render 002 --preview` で動画化します。
 
-公開前には、Fact Packの一次資料、独自表現、字幕の読みやすさ、音声の間、最終的な映像を人間が確認してください。
-
-## Phase 2への接続点
-
-次段階では、既存スキーマを壊さず次を追加できます。
-
-1. `voice.yaml` を使ったシーン単位TTS
-2. 音声ファイルの実測秒数で `timeline.json` を再構築
-3. 実測時刻からSRTを再生成
-4. `visual_template` に対応するSVG・背景・テキスト描画
-5. FFmpegで1080×1920の `draft.mp4` を生成
-6. BGM/SEの仮配置と音量正規化
-
-TikTok等への自動投稿は、公開直前の人間確認を残すため初期スコープに含めません。
+次の拡張候補は、BGM/SEの仮配置、POV・ミステリー専用図解、投稿用カバー生成、Google Sheetsからのテーマ投入です。

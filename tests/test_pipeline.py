@@ -46,3 +46,4 @@ def test_planned_timeline_and_srt_end_at_fifty_seconds() -> None:
     assert timeline[-1].pause_end_seconds == 50.0
     assert "00:00:50,000" in srt
     assert "\n。" not in srt
+    assert "変え\nます" not in srt

@@ -16,16 +16,17 @@ from .errors import PipelineError
 from .models import GeneratedPackage
 from .providers import OfflineGoldenProvider, OpenAIStructuredProvider
 from .quality import validate_generated_package
+from .render import render_phase2
 from .repository import ProjectRepository
 
 
-COMMANDS = {"generate", "validate", "list", "prompt"}
+COMMANDS = {"generate", "render", "validate", "list", "prompt"}
 
 
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="pipeline.py",
-        description="『1分思考実験』半自動動画生成パイプライン Phase 1",
+        description="『1分思考実験』半自動動画生成パイプライン",
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
 
@@ -38,6 +39,22 @@ def _parser() -> argparse.ArgumentParser:
     )
     generate.add_argument("--overwrite", action="store_true", help="既存成果物を上書き")
     generate.add_argument("--output-root", type=Path, help="出力ルートを変更")
+
+    render = subparsers.add_parser("render", help="音声・実測字幕・縦型動画を生成")
+    render.add_argument("experiment_id", help="例: 001")
+    render.add_argument(
+        "--voice-provider",
+        choices=("auto", "openai", "system", "silent"),
+        default="auto",
+        help="autoはAPIキー、macOS音声、無音の順に自動選択",
+    )
+    render.add_argument(
+        "--preview",
+        action="store_true",
+        help="確認用の軽量な540×960動画を生成",
+    )
+    render.add_argument("--overwrite", action="store_true", help="既存成果物を上書き")
+    render.add_argument("--output-root", type=Path, help="出力ルートを変更")
 
     validate = subparsers.add_parser("validate", help="設定・Fact Pack・生成物を検証")
     validate.add_argument("--experiment", help="特定IDだけを検証")
@@ -62,6 +79,8 @@ def main(argv: list[str] | None = None) -> int:
     try:
         if args.command == "generate":
             return _generate(args, repository)
+        if args.command == "render":
+            return _render(args, repository)
         if args.command == "validate":
             return _validate(args, repository)
         if args.command == "list":
@@ -82,9 +101,7 @@ def _generate(args: argparse.Namespace, repository: ProjectRepository) -> int:
         if args.offline
         else OpenAIStructuredProvider(llm)
     )
-    output_root = args.output_root or Path(os.getenv("OUTPUT_ROOT", "output"))
-    if not output_root.is_absolute():
-        output_root = repository.root / output_root
+    output_root = _output_root(args, repository)
 
     result = Pipeline(repository).run(
         experiment.id,
@@ -97,6 +114,40 @@ def _generate(args: argparse.Namespace, repository: ProjectRepository) -> int:
     print(f"予定尺: {result.planned_duration_seconds:.1f}秒")
     print(f"出力先: {result.output_dir}")
     print(f"成果物: {len(result.artifacts)}ファイル")
+    return 0
+
+
+def _render(args: argparse.Namespace, repository: ProjectRepository) -> int:
+    experiment = repository.experiment(args.experiment_id)
+    output_root = _output_root(args, repository)
+    output_dir = output_root / f"{experiment.id}_{experiment.slug}"
+    script_path = output_dir / "script.json"
+    if not script_path.is_file():
+        print("Phase 1成果物がないため、オフライン合格サンプルから先に生成します。")
+        Pipeline(repository).run(
+            experiment.id,
+            OfflineGoldenProvider(repository.root),
+            output_root=output_root,
+            overwrite=False,
+        )
+
+    result = render_phase2(
+        repository=repository,
+        experiment_id=experiment.id,
+        output_root=output_root,
+        voice_mode=args.voice_provider,
+        preview=args.preview,
+        overwrite=args.overwrite,
+    )
+    mode = "軽量プレビュー" if args.preview else "投稿解像度"
+    print(f"動画生成完了: {experiment.title} ({mode})")
+    print(f"音声: {result.provider_name}")
+    print(f"実測尺: {result.actual_duration_seconds:.1f}秒")
+    if not result.duration_in_target_range:
+        print("注意: 実測尺がFact Packの目標範囲外です。音声速度を調整してください。")
+    print(f"映像: {result.width}×{result.height} / {result.fps}fps")
+    print(f"動画: {result.video_path}")
+    print(f"絵コンテ: {result.storyboard_path}")
     return 0
 
 
@@ -159,6 +210,13 @@ def _prompt(args: argparse.Namespace, repository: ProjectRepository) -> int:
     print("\n--- user ---")
     print(prompt.user)
     return 0
+
+
+def _output_root(args: argparse.Namespace, repository: ProjectRepository) -> Path:
+    output_root = args.output_root or Path(os.getenv("OUTPUT_ROOT", "output"))
+    if not output_root.is_absolute():
+        output_root = repository.root / output_root
+    return output_root
 
 
 if __name__ == "__main__":

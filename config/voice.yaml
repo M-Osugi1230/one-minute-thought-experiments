@@ -5,6 +5,11 @@ voice: "cedar"
 format: "wav"
 speed: 1.0
 instructions: "落ち着いた低めの声。煽らず、問いの直前と直後に自然な間を置く。"
+system_voice: "Kyoko"
+system_rate: 175
+sample_rate_hz: 24000
+channels: 1
+disclosure_text: "この動画のナレーションにはAI生成音声を使用しています。"
 normalization:
   target_lufs: -16.0
   true_peak_db: -1.5

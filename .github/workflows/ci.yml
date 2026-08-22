@@ -1,4 +1,4 @@
-name: Phase 1 checks
+name: Phase 1 and 2 checks
 
 on:
   push:

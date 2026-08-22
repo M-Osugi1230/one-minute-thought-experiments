@@ -134,11 +134,30 @@ class TimelineConfig(StrictModel):
     subtitle_tail_seconds: float = Field(ge=0)
 
 
+class PaletteConfig(StrictModel):
+    background: str = Field(pattern=r"^#[0-9A-Fa-f]{6}$")
+    background_alt: str = Field(pattern=r"^#[0-9A-Fa-f]{6}$")
+    foreground: str = Field(pattern=r"^#[0-9A-Fa-f]{6}$")
+    muted: str = Field(pattern=r"^#[0-9A-Fa-f]{6}$")
+    accent: str = Field(pattern=r"^#[0-9A-Fa-f]{6}$")
+    danger: str = Field(pattern=r"^#[0-9A-Fa-f]{6}$")
+
+
+class RenderConfig(StrictModel):
+    preview_scale: float = Field(gt=0, le=1)
+    preview_fps: int = Field(ge=1, le=60)
+    subtitle_box_opacity: int = Field(ge=0, le=255)
+    video_codec: str = Field(min_length=1)
+    audio_bitrate: str = Field(pattern=r"^\d+[kKmM]$")
+
+
 class VideoConfig(StrictModel):
     canvas: CanvasConfig
     safe_area: SafeAreaConfig
     subtitle: SubtitleConfig
     timeline: TimelineConfig
+    palette: PaletteConfig
+    render: RenderConfig
 
 
 class VoiceNormalization(StrictModel):
@@ -153,6 +172,11 @@ class VoiceConfig(StrictModel):
     format: Literal["wav", "mp3", "aac", "flac", "opus", "pcm"]
     speed: float = Field(gt=0, le=4)
     instructions: str
+    system_voice: str = Field(min_length=1)
+    system_rate: int = Field(ge=80, le=500)
+    sample_rate_hz: int = Field(ge=8000, le=192000)
+    channels: int = Field(ge=1, le=2)
+    disclosure_text: str = Field(min_length=1)
     normalization: VoiceNormalization
 
 
