@@ -1,0 +1,60 @@
+id: "001"
+slug: "trolley_problem"
+title: "トロッコ問題"
+category: "倫理・道徳"
+status: "ready"
+template: "binary_choice"
+one_line_summary: "5人を救うために、1人がいる側へ列車の進路を変えるかを問う"
+core_question: "5人を救うために、自分の選択で1人を犠牲にできるか"
+target_duration:
+  min_seconds: 40.0
+  ideal_seconds: 48.0
+  max_seconds: 55.0
+scenario:
+  viewer_role: "分岐器のレバーの前にいる人"
+  initial_state: "制御不能の列車が、そのままでは線路上の5人へ向かう"
+  available_action: "レバーを引き、列車を別の線路へ切り替える"
+  action_result: "5人は助かるが、別の線路にいる1人が犠牲になる"
+  inaction_result: "進路は変わらず、5人が犠牲になる"
+  constraints:
+    - "列車を止める、警告する、全員を救うなどの第三の選択肢はない"
+    - "人数は基本形として5人対1人を使う"
+choices:
+  - label: "A"
+    action: "レバーを引く"
+    consequence: "1人が犠牲になり、5人が助かる"
+  - label: "B"
+    action: "レバーを引かない"
+    consequence: "自分では進路を変えず、5人が犠牲になる"
+variation_question: "その1人があなたの家族だったら、それでもレバーを引くか"
+philosophical_focus:
+  primary: "結果の人数だけでなく、行為と不作為を同じように評価できるか"
+  avoid_overclaiming:
+    - "功利主義なら全員が必ず同じ結論になる、とは断定しない"
+    - "唯一の正解があるように見せない"
+facts:
+  - "暴走する乗り物と5人対1人の選択は、トロッコ問題の代表的な基本形である"
+  - "フィリッパ・フットが1967年の論文で暴走する路面電車の例を提示した"
+  - "ジュディス・ジャーヴィス・トムソンが後に複数の変形を論じ、問題を発展させた"
+sources:
+  - author: "Philippa Foot"
+    title: "The Problem of Abortion and the Doctrine of the Double Effect"
+    year: 1967
+    kind: "primary"
+    locator: "Oxford Review, No. 5"
+  - author: "Judith Jarvis Thomson"
+    title: "The Trolley Problem"
+    year: 1985
+    kind: "primary"
+    locator: "Yale Law Journal, 94(6), 1395–1415"
+    url: "https://doi.org/10.2307/796133"
+content_rules:
+  must_include:
+    - "5人対1人"
+    - "レバーを引くか引かないかのA/B選択"
+    - "トロッコ問題という名称の後半での公開"
+    - "家族という条件を加えた第二の問い"
+  must_not_include:
+    - "第三の救済手段"
+    - "視聴者への人格評価"
+    - "特定の選択を正解とする結論"

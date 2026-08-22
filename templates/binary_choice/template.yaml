@@ -1,0 +1,17 @@
+name: "binary_choice"
+description: "当事者化した二択を提示し、条件変更でもう一度選ばせる"
+scene_order:
+  - hook
+  - scenario
+  - setup
+  - consequence
+  - choice
+  - reveal
+  - insight
+  - second_question
+  - cta
+visual_language:
+  background: "black"
+  foreground: "white"
+  accent: "gold"
+  style: "minimal diagram and silhouette"

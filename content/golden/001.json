@@ -1,0 +1,132 @@
+{
+  "schema_version": "1.0",
+  "experiment_id": "001",
+  "experiment_title": "トロッコ問題",
+  "working_title": "5人を救うために、1人を犠牲にできますか？",
+  "hook_options": [
+    {
+      "narration": "5人を救うために、あなたは1人を犠牲にできますか？",
+      "screen_text": "5人を救うために\n1人を犠牲にできる？",
+      "angle": "人数と犠牲を一文で突きつける"
+    },
+    {
+      "narration": "あなたの目の前のレバーで、5人の命が決まります。",
+      "screen_text": "このレバーで\n5人の命が決まる",
+      "angle": "視聴者の行為に焦点を当てる"
+    },
+    {
+      "narration": "何もしなければ5人が死ぬ。それでも、あなたは動きませんか？",
+      "screen_text": "何もしなければ\n5人が死ぬ",
+      "angle": "不作為の責任から始める"
+    }
+  ],
+  "selected_hook_index": 0,
+  "scenes": [
+    {
+      "id": 1,
+      "purpose": "hook",
+      "narration": "5人を救うために、あなたは1人を犠牲にできますか？",
+      "screen_text": "5人を救うために\n1人を犠牲にできる？",
+      "visual_description": "暗い線路を正面から迫る列車と、その先の分岐を一瞬で見せる",
+      "visual_template": "dramatic_question",
+      "emphasis_words": ["5人", "1人"],
+      "duration_seconds": 3.8,
+      "pause_after_seconds": 0.2
+    },
+    {
+      "id": 2,
+      "purpose": "scenario",
+      "narration": "制御不能の列車が、5人に向かっています。",
+      "screen_text": "このまま進む → 5人",
+      "visual_description": "上から見た直線の線路上に5人の白いシルエットを配置する",
+      "visual_template": "track_overview",
+      "emphasis_words": ["制御不能", "5人"],
+      "duration_seconds": 5.2,
+      "pause_after_seconds": 0.0
+    },
+    {
+      "id": 3,
+      "purpose": "setup",
+      "narration": "あなたの目の前にはレバーがあります。引けば進路が変わり、5人は助かります。",
+      "screen_text": "レバーを引く → 5人が助かる",
+      "visual_description": "手前のレバーを金色に光らせ、分岐先へ線路が切り替わる動きを示す",
+      "visual_template": "lever_switch",
+      "emphasis_words": ["レバー", "5人が助かる"],
+      "duration_seconds": 7.0,
+      "pause_after_seconds": 0.0
+    },
+    {
+      "id": 4,
+      "purpose": "consequence",
+      "narration": "でも、その先には1人います。",
+      "screen_text": "1人が犠牲になる。",
+      "visual_description": "分岐先に立つ1人のシルエットだけを静かにクローズアップする",
+      "visual_template": "single_person_focus",
+      "emphasis_words": ["1人"],
+      "duration_seconds": 4.0,
+      "pause_after_seconds": 0.5
+    },
+    {
+      "id": 5,
+      "purpose": "choice",
+      "narration": "A、1人を犠牲にして5人を救う。B、何もせず進路を変えない。あなたならレバーを引きますか？",
+      "screen_text": "A 引く / B 引かない",
+      "visual_description": "画面を左右に分け、左に金色のレバー、右に動かない手を表示する",
+      "visual_template": "binary_choice_split",
+      "emphasis_words": ["A 引く", "B 引かない"],
+      "duration_seconds": 5.0,
+      "pause_after_seconds": 2.0
+    },
+    {
+      "id": 6,
+      "purpose": "reveal",
+      "narration": "これは『トロッコ問題』と呼ばれる、有名な思考実験です。",
+      "screen_text": "THOUGHT EXPERIMENT #001\nトロッコ問題",
+      "visual_description": "暗転後、中央に白と金のタイトルカードを表示する",
+      "visual_template": "title_reveal",
+      "emphasis_words": ["トロッコ問題"],
+      "duration_seconds": 5.5,
+      "pause_after_seconds": 0.0
+    },
+    {
+      "id": 7,
+      "purpose": "insight",
+      "narration": "結果だけを見れば1人より5人。でも、引けばあなたの選択で1人の運命を変えます。何もしないのと、自分で選ぶのは同じでしょうか？",
+      "screen_text": "「何もしない」と\n「自分で選ぶ」は同じ？",
+      "visual_description": "1対5の人数表示から、レバーに触れる手のシルエットへ切り替える",
+      "visual_template": "action_vs_inaction",
+      "emphasis_words": ["結果", "あなたの選択"],
+      "duration_seconds": 7.5,
+      "pause_after_seconds": 0.0
+    },
+    {
+      "id": 8,
+      "purpose": "second_question",
+      "narration": "では、その1人があなたの家族だったら。それでもレバーを引きますか？",
+      "screen_text": "その1人が\nあなたの家族だったら？",
+      "visual_description": "1人の抽象的なシルエットを、家族写真を思わせる複数人の輪郭へ変える",
+      "visual_template": "condition_twist",
+      "emphasis_words": ["家族", "それでも"],
+      "duration_seconds": 6.0,
+      "pause_after_seconds": 0.8
+    },
+    {
+      "id": 9,
+      "purpose": "cta",
+      "narration": "A、引く。B、引かない。理由も一言で教えてください。",
+      "screen_text": "A 引く / B 引かない\n理由も一言だけ",
+      "visual_description": "黒背景にAとBを左右へ大きく置き、中央下にコメント記号を表示する",
+      "visual_template": "comment_cta",
+      "emphasis_words": ["A", "B", "理由"],
+      "duration_seconds": 2.5,
+      "pause_after_seconds": 0.0
+    }
+  ],
+  "caption": "5人を救うためなら、1人を犠牲にできますか？ その1人が家族でも、答えは同じでしょうか。AかBと、その理由を一言で教えてください。",
+  "pinned_comment": "まず直感で。A：引く / B：引かない。できれば『なぜそうしたか』も一言だけ。",
+  "hashtags": ["思考実験", "トロッコ問題", "哲学", "あなたならどうする", "1分思考実験"],
+  "editorial_notes": [
+    "choice後の2秒はBGMを落として回答時間にする",
+    "家族の具体的な顔は出さず、視聴者が自分の家族を想像できる余白を残す"
+  ]
+}

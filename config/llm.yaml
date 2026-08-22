@@ -1,0 +1,6 @@
+provider: "openai"
+model_env: "OPENAI_MODEL"
+default_model: "gpt-5.4-mini"
+max_output_tokens: 7000
+store: false
+prompt_version: "phase1-v1"

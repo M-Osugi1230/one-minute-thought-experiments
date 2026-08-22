@@ -1,0 +1,27 @@
+brand_name: "1分思考実験"
+language: "ja-JP"
+audience: "思考実験を初めて見る一般視聴者"
+tone: "静かで緊張感があり、煽りすぎず、答えを押しつけない"
+principles:
+  - "思考実験名から始めない"
+  - "視聴者を主人公にする"
+  - "専門用語を入口にしない"
+  - "必ず選択を発生させる"
+  - "説明だけで終了しない"
+  - "最後に条件を変えた第二の問いを置く"
+  - "コメント欄を思考実験の続きとして設計する"
+duration:
+  min_seconds: 35.0
+  ideal_seconds: 48.0
+  max_seconds: 55.0
+required_scene_purposes:
+  - hook
+  - scenario
+  - choice
+  - reveal
+  - insight
+  - second_question
+  - cta
+forbidden_hook_terms:
+  - "思考実験"
+  - "哲学"

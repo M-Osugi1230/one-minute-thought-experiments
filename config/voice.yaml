@@ -1,0 +1,10 @@
+# Phase 2 connection point. Phase 1 uses planned scene durations only.
+provider: "openai"
+model: "gpt-4o-mini-tts"
+voice: "cedar"
+format: "wav"
+speed: 1.0
+instructions: "落ち着いた低めの声。煽らず、問いの直前と直後に自然な間を置く。"
+normalization:
+  target_lufs: -16.0
+  true_peak_db: -1.5

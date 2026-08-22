@@ -1,0 +1,7 @@
+experiments:
+  - id: "001"
+    slug: "trolley_problem"
+    title: "トロッコ問題"
+    path: "content/experiments/001_trolley_problem.yaml"
+    template: "binary_choice"
+    status: "ready"
