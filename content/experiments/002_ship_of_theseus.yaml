@@ -1,0 +1,69 @@
+id: "002"
+slug: "ship_of_theseus"
+title: "テセウスの船"
+category: "人間・同一性"
+status: "ready"
+template: "binary_choice"
+one_line_summary: "船の部品を少しずつすべて交換したとき、それは元と同じ船なのかを問う"
+core_question: "物の同一性は、材料・形・機能・歴史的な連続性のどこに宿るのか"
+target_duration:
+  min_seconds: 40.0
+  ideal_seconds: 48.0
+  max_seconds: 55.0
+scenario:
+  viewer_role: "古い船を修理し続ける人"
+  initial_state: "傷んだ木の部品を一つずつ新しいものに交換しながら、同じ船として使い続ける"
+  available_action: "部品交換を続ける"
+  action_result: "最終的に元の部品が一つも残らない船ができる"
+  inaction_result: "この思考実験では、修理を途中でやめる選択は扱わない"
+  constraints:
+    - "交換は一度に全部ではなく、長い時間をかけて少しずつ行う"
+    - "最終的には元の部品が一つも残らない"
+    - "第一問では、交換後の船を元と同じ船と呼べるかだけを問う"
+choices:
+  - label: "A"
+    action: "同じ船だと思う"
+    consequence: "部品がすべて新しくなっても、船の連続性を重視する"
+  - label: "B"
+    action: "別の船だと思う"
+    consequence: "元の材料が失われたことで、同一性も失われたとみなす"
+variation_question: "取り外した元の部品を全部集めて、同じ形の船をもう一隻組み直したら、どちらが『元の船』か"
+philosophical_focus:
+  primary: "時間を通じた同一性と変化。何が変わっても『同じもの』と言える基準は何か"
+  avoid_overclaiming:
+    - "材料だけ、形だけ、機能だけのどれかが唯一の正解だと断定しない"
+    - "人間の身体や人格の同一性と完全に同じ問題だとは断定しない"
+facts:
+  - "プルタルコス『テセウス伝』23.1は、アテナイ人がテセウスの船を保存し、古い木材を順次新しい木材に交換していたと伝える"
+  - "同箇所では、哲学者たちの間で、その船が同じ船のままかどうか意見が分かれたとされる"
+  - "トマス・ホッブズは『物体論（De Corpore）』第2部第11章で、取り外した古い板を保存して元の順序で組み直す第二の船を加え、問題を鋭くした"
+sources:
+  - author: "Plutarch"
+    title: "Life of Theseus"
+    year: "c. 1st–2nd century CE"
+    kind: "primary"
+    locator: "23.1"
+    url: "https://www.perseus.tufts.edu/hopper/text?doc=Perseus%3Atext%3A2008.01.0067%3Achapter%3D23%3Asection%3D1"
+  - author: "Thomas Hobbes"
+    title: "De Corpore"
+    year: 1655
+    kind: "primary"
+    locator: "Part II, Chapter XI, §7"
+  - author: "Stanford Encyclopedia of Philosophy"
+    title: "Identity Over Time"
+    year: 2026
+    kind: "secondary"
+    locator: "Ship of Theseus / diachronic identity puzzle"
+    url: "https://plato.stanford.edu/entries/identity-time/"
+content_rules:
+  must_include:
+    - "部品を一つずつ交換すること"
+    - "最終的に元の部品が一つも残らないこと"
+    - "最初に『同じ船か別の船か』を選ばせること"
+    - "取り外した元の部品を組み直すホッブズの条件変更"
+    - "『テセウスの船』という名称は後半で公開すること"
+  must_not_include:
+    - "最初から思考実験名を見せること"
+    - "どちらかの答えを正解扱いすること"
+    - "プルタルコスの基本形とホッブズの再組立て版を同一の原典として扱うこと"
+    - "書籍本文の転載やKindle画面の使用"
