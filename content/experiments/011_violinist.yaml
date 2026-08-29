@@ -1,0 +1,105 @@
+id: "011"
+slug: "violinist"
+title: "バイオリニスト"
+original_title: "The Violinist"
+status: "fact_checked"
+
+one_line_summary: >-
+  本人の同意なく、重病のバイオリニストの生命維持のために自分の身体へ接続されたとき、
+  その接続を続ける義務があるのかを問う思考実験。
+
+core_question: >-
+  他者に生命への権利があるとしても、その人を生かすために別の人の身体を使用する権利まで含まれるのか。
+
+viewer_role: >-
+  目覚めると、意識のない有名なバイオリニストと医療装置で接続され、
+  自分の腎臓が彼の血液を浄化している人物。
+
+initial_state:
+  - "あなたは本人の同意なく接続されている。"
+  - "相手は重い腎臓の病気を抱える有名なバイオリニスト。"
+  - "あなたは彼を助けられる適合者として選ばれている。"
+  - "接続を外すと、バイオリニストは死亡すると想定される。"
+  - "約9か月接続を続ければ、彼は回復して安全に切り離せるとされる。"
+
+constraints:
+  - "視聴者本人は接続に同意していない。"
+  - "バイオリニスト本人を悪人として描かない。"
+  - "医療行為・身体描写は非グロテスクにする。"
+  - "思考実験の結論を『証明済み』として断定しない。"
+  - "原典の議論と、投稿用に追加した条件変更を区別する。"
+
+choices:
+  primary:
+    A: "接続を外す"
+    B: "9か月つなぐ"
+  note: >-
+    A/Bのいずれかを正解扱いしない。選択の理由をコメントで取得する。
+
+variation_question:
+  type: "relationship_change"
+  text: >-
+    もし、つながれている相手が見知らぬ人ではなく、あなたの家族だったら答えは変わるか。
+  purpose: >-
+    関係性が身体利用の義務についての直感をどの程度変えるかを見る。
+  provenance: "投稿用の追加条件。Thomsonの原典バイオリニスト設定そのものではない。"
+
+philosophical_focus:
+  - "right_to_life"
+  - "bodily_autonomy"
+  - "positive_vs_negative_rights"
+  - "limits_of_obligation"
+  - "analogy_and_moral_relevance"
+
+facts:
+  - claim: "この思考実験はJudith Jarvis Thomsonの論文『A Defense of Abortion』で提示された。"
+    confidence: "high"
+  - claim: "論文はPhilosophy & Public Affairs, Vol. 1, No. 1 (Autumn 1971), pp. 47-66 に掲載された。"
+    confidence: "high"
+  - claim: >-
+      原典では、あなたは意識のない有名なバイオリニストと背中合わせに接続され、
+      あなたの腎臓が彼の血液から毒を取り除くために利用される。
+    confidence: "high"
+  - claim: >-
+      Society of Music Loversが適合者を探し、あなたを誘拐して接続したという設定で、
+      接続は本人の同意なく行われる。
+    confidence: "high"
+  - claim: "原典では、9か月後にはバイオリニストが回復し、安全に切り離せるという設定が置かれる。"
+    confidence: "high"
+  - claim: >-
+      Thomsonはこの例を、生命への権利が直ちに他人の身体を使用する権利を意味するのかを検討するために用いる。
+    confidence: "high"
+  - claim: >-
+      この類推が妊娠のあらゆるケースに当てはまるか、誘拐設定・責任・親子関係・殺すことと死なせることの違いなどについて多くの反論がある。
+    confidence: "high"
+
+sources:
+  - type: "primary"
+    citation: "Judith Jarvis Thomson, 'A Defense of Abortion,' Philosophy & Public Affairs 1(1), 47-66 (1971)."
+    url: "https://www.jstor.org/stable/2265091"
+  - type: "bibliographic"
+    citation: "PhilPapers record for Judith Jarvis Thomson, 'A defense of abortion' (1971)."
+    url: "https://philpapers.org/rec/THOADO-2"
+  - type: "accessible_reprint"
+    citation: "University of Colorado-hosted reprint of Judith Jarvis Thomson, 'A Defense of Abortion'."
+    url: "https://spot.colorado.edu/~heathwoo/Phil160%2CFall02/thomson.htm"
+  - type: "project_source"
+    citation: "岡本裕一朗『思考実験大全』収録『バイオリニスト』。公開物では本文を転用せず、独自表現へ再構成する。"
+
+must_include:
+  - "視聴者本人が同意していないこと"
+  - "相手の生命が視聴者の身体に依存していること"
+  - "9か月という原典の条件"
+  - "思考実験名とThomsonの名前は後半で公開"
+  - "生命への権利と、他者の身体を使う権利を区別して問う"
+
+must_not_include:
+  - "Thomsonの立場を哲学上の確定結論として提示する"
+  - "視聴者のA/B回答を善悪で評価する"
+  - "投稿用の家族条件を原典設定として扱う"
+  - "露骨な医療・血液・臓器描写"
+  - "書籍や原典の長い文章を引用・転用する"
+
+fact_check_notes: >-
+  原典書誌はJSTORおよびPhilPapersで確認。投稿では論争的なテーマそのものを結論づけず、
+  思考実験が切り出す『生命への権利は他者の身体利用まで含むか』という論点に限定する。
