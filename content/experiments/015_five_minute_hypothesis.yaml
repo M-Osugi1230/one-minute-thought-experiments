@@ -1,0 +1,104 @@
+id: "015"
+slug: "five_minute_hypothesis"
+title: "世界5分前仮説"
+original_title: "Five-Minute Hypothesis"
+status: "fact_checked"
+
+one_line_summary: >-
+  世界が5分前に、現在ある記憶や痕跡を含めて今の状態のまま突然始まったとしても、
+  私たちは現在の記憶だけからその可能性を論理的に排除できるのかを問う思考実験。
+
+core_question: >-
+  現在の記憶や証拠が存在することだけで、過去が実際に存在したことまで証明できるのか。
+
+viewer_role: >-
+  昨日の記憶、子どもの頃の写真、長年使った物など、過去を示すように見える証拠を持つ現在の人物。
+
+initial_state:
+  - "あなたには昨日の記憶がある。"
+  - "過去の写真や、長く使ったように見える物も残っている。"
+  - "通常は、それらを過去が存在した証拠として受け取っている。"
+  - "しかし、世界が5分前に、それらの記憶・痕跡を含む現在の状態で始まった可能性を考える。"
+
+constraints:
+  - "世界が5分前に始まったという仮説を事実として断定しない。"
+  - "Russell自身が過去の非存在を真剣な仮説として推奨したわけではないことを明示する。"
+  - "核心は記憶と過去についての認識論的問題であり、陰謀論やシミュレーション説へ寄せすぎない。"
+  - "投稿用の写真・化石などの具体例は、現在に残る痕跡を分かりやすくするための独自例として扱う。"
+
+choices:
+  primary:
+    A: "昨日は本当にあったと言い切れる"
+    B: "今の証拠だけでは言い切れない"
+  note: >-
+    A/Bのどちらかを正解扱いしない。Russellの論点は、現在の記憶内容と過去の実在のあいだに
+    論理的必然性があるかを切り分けることにある。
+
+variation_question:
+  type: "evidence_extension"
+  text: >-
+    記憶だけでなく、写真や化石のような痕跡まで5分前に現在の状態で生じたとしたら、
+    あなたは何を過去の証拠にするか。
+  purpose: >-
+    記憶から外部証拠へ対象を広げたとき、視聴者が『過去を知る』根拠をどこに置くかを見る。
+  provenance: >-
+    投稿用に具体化した追加問い。Russellの原文は、世界と人口が5分前に現在の状態で生じ、
+    人々が実在しない過去を『記憶』しているという論理的可能性を論じる。
+
+philosophical_focus:
+  - "epistemology"
+  - "memory"
+  - "knowledge_of_the_past"
+  - "skepticism"
+  - "logical_possibility"
+  - "evidence_and_inference"
+
+facts:
+  - claim: "Bertrand Russellは1921年刊行の『The Analysis of Mind』Lecture IX（Memory）で、世界が5分前に現在の状態のまま生じたという仮説に論理的矛盾はないと述べた。"
+    confidence: "high"
+  - claim: >-
+      Russellの例では、世界は5分前に、その時点の状態のまま、実在しない過去を『記憶』する人口を含めて生じたとされる。
+    confidence: "high"
+  - claim: >-
+      Russellは、現在または未来に起こることだけでは『世界が5分前に始まった』という仮説を論理的に反証できないと論じる。
+    confidence: "high"
+  - claim: >-
+      この議論は、記憶信念を構成するものは現在に生じており、その記憶内容と過去の出来事の実在が論理的に同一ではないことを示す文脈で提示される。
+    confidence: "high"
+  - claim: "Russellは直後に、過去の非存在を真剣な仮説として受け入れるよう提案しているわけではないと明言する。"
+    confidence: "high"
+  - claim: >-
+      『思考実験大全』の目次では『世界の「継続性」を立証できるか？―世界5分前仮説』として収録されている。
+    confidence: "high"
+
+sources:
+  - type: "primary"
+    citation: "Bertrand Russell, The Analysis of Mind, Lecture IX: Memory (1921)."
+    url: "https://www.gutenberg.org/cache/epub/2529/pg2529-images.html"
+  - type: "primary_mirror"
+    citation: "Bertrand Russell, The Analysis of Mind/Lecture IX, Wikisource."
+    url: "https://en.wikisource.org/wiki/The_Analysis_of_Mind/Lecture_IX"
+  - type: "project_source"
+    citation: "岡本裕一朗『思考実験大全』収録『世界5分前仮説』。公開物では本文・Kindle画面を転用せず独自表現へ再構成する。"
+
+must_include:
+  - "視聴者自身の記憶・過去の証拠から始める"
+  - "世界が5分前に現在の状態で始まったという条件"
+  - "思考実験名とBertrand Russellは後半で公開する"
+  - "現在の記憶と過去の実在を論理的に区別して問う"
+  - "Russell自身がこの仮説を真剣な世界説として推奨していないこと"
+  - "最後は過去の証拠を何に置くかという第二の問いで終える"
+
+must_not_include:
+  - "世界は実際に5分前に作られた、と断定する"
+  - "Russellが世界5分前説を信じていた、と表現する"
+  - "現在の証拠が無意味だと結論づける"
+  - "陰謀論・宗教説・シミュレーション仮説と同一視する"
+  - "書籍や原典の長い文章を引用・転用する"
+  - "背景画像へ本文・ブランド名・数字・ロゴを焼き込む"
+
+fact_check_notes: >-
+  Russellの一次資料『The Analysis of Mind』Lecture IXをProject GutenbergおよびWikisourceで確認。
+  投稿では『論理的に排除できるか』という問いを中心にし、Russellがこの仮説を真剣な世界説として
+  推奨していない点をPage 7で短く補足する。写真・化石は視聴者が現在の痕跡を直感的に理解するための投稿用具体例であり、
+  Russell原文の逐語的な例としては扱わない。
