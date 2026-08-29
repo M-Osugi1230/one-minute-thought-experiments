@@ -1,0 +1,107 @@
+id: "045"
+slug: "prisoners_dilemma"
+title: "囚人のジレンマ"
+original_title: "Prisoner's Dilemma"
+status: "fact_checked"
+
+one_line_summary: >-
+  2人が相談できない状況で、それぞれにとって自白が有利でも、
+  2人とも自白すると、2人とも黙秘した場合より悪い結果になることを示す代表的なゲーム理論上のジレンマ。
+
+core_question: >-
+  相手の選択が分からないとき、個人として合理的な選択を積み重ねた結果、
+  全員にとってより悪い結果になるなら、「合理的に選ぶ」とは何を意味するのか。
+
+viewer_role: >-
+  共犯者と別々の部屋で取り調べを受け、相手と相談できないまま、
+  黙秘するか自白するかを一人で決める人物。
+
+initial_state:
+  - "2人は別室に置かれ、相談できない。"
+  - "警察は重い罪について決定的な証拠を持っていないが、軽い罪なら立件できる。"
+  - "2人とも黙秘すれば、2人とも2年。"
+  - "2人とも自白すれば、2人とも5年。"
+  - "一方だけが自白し、もう一方が黙秘すれば、自白した側は釈放、黙秘した側は10年。"
+
+constraints:
+  - "A/Bのどちらかを道徳的な正解として扱わない。"
+  - "2年・5年・10年・釈放という数値は本プロジェクトの基礎資料『思考実験大全』の掲載例に合わせる。"
+  - "囚人のジレンマ一般の定義を、この特定の刑期数値に限定しない。"
+  - "ゲーム構造の起源と、囚人の物語の考案者を混同しない。"
+  - "基本形と、100回反復する条件変更を明確に区別する。"
+
+choices:
+  primary:
+    A: "黙秘"
+    B: "自白"
+  note: >-
+    この刑期設定では、相手が黙秘しても自白した方が自分の刑期は短く、
+    相手が自白しても自白した方が自分の刑期は短い。一方で、2人とも黙秘した結果は2人とも自白した結果より良い。
+
+variation_question:
+  type: "repeated_game"
+  text: >-
+    もし同じ相手とこのゲームを100回繰り返すと分かっていたら、最初の1回は黙秘から始めるか、自白から始めるか。
+  purpose: >-
+    一回限りの意思決定と、将来の再会・報復・協力可能性がある反復ゲームで直感が変わるかを見る。
+  provenance: >-
+    投稿用の第二の問い。反復囚人のジレンマはゲーム理論で独立に研究されており、
+    FloodとDresherの1950年の実験も同じ2人による100回反復だった。
+
+philosophical_focus:
+  - "individual_vs_collective_rationality"
+  - "cooperation"
+  - "dominant_strategy"
+  - "trust"
+  - "one_shot_vs_repeated_games"
+
+facts:
+  - claim: >-
+      囚人のジレンマ型のゲーム構造は、RAND CorporationでMerrill FloodとMelvin Dresherが1950年に研究したゲームにさかのぼる。
+    confidence: "high"
+  - claim: >-
+      刑期を使った囚人の物語は、Albert W. Tuckerが1950年にStanfordの心理学者向けに構造を説明するために用いた。
+    confidence: "high"
+  - claim: >-
+      囚人のジレンマでは、各プレイヤーにとって裏切り／自白が相手の選択にかかわらず有利になる一方、
+      双方が協力／黙秘した結果は双方が裏切り／自白した結果より良いという構造が中心になる。
+    confidence: "high"
+  - claim: >-
+      一回限りの囚人のジレンマと、同じ相手と繰り返す反復ゲームでは、将来の相互作用が戦略上の意味を変えうる。
+    confidence: "high"
+  - claim: >-
+      『思考実験大全』収録例では、双方黙秘2年、双方自白5年、一方のみ自白なら自白側0年・黙秘側10年という刑期設定が使われる。
+    confidence: "high"
+
+sources:
+  - type: "reference"
+    citation: "Stanford Encyclopedia of Philosophy, 'Prisoner's Dilemma'."
+    url: "https://plato.stanford.edu/entries/prisoner-dilemma/"
+  - type: "historical"
+    citation: "Alvin E. Roth, 'Early History of Experimental Economics' — Flood and Dresher's 1950 repeated-game experiment."
+    url: "https://stanford.edu/~alroth/history.html"
+  - type: "reference"
+    citation: "Stanford Encyclopedia of Philosophy, 'Game Theory', section on repeated games."
+    url: "https://plato.stanford.edu/entries/game-theory/"
+  - type: "project_source"
+    citation: "岡本裕一朗『思考実験大全』収録『合理的な選択はいつも正しい結果をもたらすか？―囚人のジレンマ』。公開物では本文を転用せず、独自表現へ再構成する。"
+
+must_include:
+  - "2人は別室で相談できない"
+  - "双方黙秘=2年、双方自白=5年、一方だけ自白=自白側釈放・黙秘側10年という掲載例の条件"
+  - "相手がどちらを選んでも自白が自分に有利になる構造"
+  - "それでも双方黙秘の方が双方自白より2人にとって良いというジレンマ"
+  - "思考実験名は後半で公開"
+  - "Tuckerの帰属は『囚人の物語で説明』とし、ゲーム構造そのものの単独考案者と断定しない"
+
+must_not_include:
+  - "A/Bのどちらかを正解・善・悪と断定する"
+  - "この特定の刑期数値だけが囚人のジレンマの唯一の定義だと説明する"
+  - "Albert Tuckerがゲーム構造をゼロから単独で発明したと断定する"
+  - "100回反復を一回限りの基本設定に混ぜる"
+  - "書籍本文や参考文献の長い文章をそのまま引用・転用する"
+
+fact_check_notes: >-
+  プロジェクト基礎資料ではAlbert Tuckerを考案者として紹介しているが、歴史的にはFloodとDresherが1950年にゲーム構造を研究し、
+  TuckerがStanfordで刑期を使った囚人の物語として説明した、という区別がより正確。
+  投稿ではこのニュアンスを守るため、Page 7の補足を『1950年、アルバート・タッカーが囚人の物語で説明。』とした。
