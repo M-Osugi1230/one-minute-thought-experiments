@@ -1,0 +1,165 @@
+{
+  "schema_version": 1,
+  "captured_at": "2026-08-31T14:31:00+09:00",
+  "source": "TikTok app / TikTok Studio screenshots supplied by account owner",
+  "account": {
+    "handle": "1minshiko",
+    "display_name": "1分思考実験",
+    "followers": 3,
+    "following": 0,
+    "profile_likes": 34
+  },
+  "seven_day_summary": {
+    "period": "2026-08-23/2026-08-29",
+    "post_views": 2174,
+    "profile_views": 16,
+    "likes": 33,
+    "comments_total_including_creator": 11,
+    "shares": 0,
+    "traffic_source_pct": {
+      "recommended": 98.2,
+      "personal_profile": 0.8,
+      "music": 0.6,
+      "search": 0.4,
+      "following": 0.0
+    },
+    "search_queries_pct": {
+      "すわんぷまん": 60.0,
+      "テセウスの船思考実験": 20.0,
+      "スワンプマン": 20.0
+    }
+  },
+  "posts": [
+    {
+      "label": "無知のベール",
+      "hook": "明日、あなたは生まれ直します。ただし、どんな人生になるかは選べません。",
+      "views": 283,
+      "likes": 10,
+      "comments_total_including_creator": 1,
+      "saves": 1
+    },
+    {
+      "label": "テセウスの船",
+      "hook": "全部の部品を交換した船は、まだ同じ船ですか？",
+      "views": 372,
+      "likes": 7,
+      "comments_total_including_creator": 0,
+      "shares": 0,
+      "saves": 0,
+      "studio": {
+        "photos_viewed_avg": 2.8,
+        "photo_count": 8,
+        "total_play_seconds": 3285,
+        "new_followers": 0,
+        "traffic_source_pct": {
+          "recommended": 99.2,
+          "search": 0.5,
+          "personal_profile": 0.3,
+          "following": 0.0,
+          "direct_message": 0.0,
+          "music": 0.0,
+          "other": 0.0
+        },
+        "search_queries_pct": {
+          "テセウスの船思考実験": 100.0
+        }
+      }
+    },
+    {
+      "label": "水槽の中の脳",
+      "hook": "今見ているこの世界が全部『偽物』だと証明できますか？",
+      "views": 219
+    },
+    {
+      "label": "中国語の部屋",
+      "hook": "中国語を1文字も読めないあなたが、完璧な中国語で会話できたら――それは『理解している』と言えますか？",
+      "views": 216,
+      "likes": 2,
+      "comments_total_including_creator": 2,
+      "saves": 1
+    },
+    {
+      "label": "メアリーの部屋",
+      "hook": "あなたは生まれてから一度も『色』を見たことがありません。でも――色についてすべて知っています。",
+      "views": 199,
+      "likes": 0,
+      "comments_total_including_creator": 1,
+      "shares": 0,
+      "saves": 0,
+      "studio": {
+        "photos_viewed_avg": 2.5,
+        "photo_count": 8,
+        "total_play_seconds": 1756,
+        "new_followers": 1,
+        "traffic_source_pct": {
+          "recommended": 98.1,
+          "other": 1.4,
+          "personal_profile": 0.5,
+          "following": 0.0,
+          "direct_message": 0.0,
+          "music": 0.0,
+          "search": 0.0
+        }
+      }
+    },
+    {
+      "label": "哲学的ゾンビ",
+      "hook": "目の前に、あなたと完全に同じ人がいる。でもその人は、内側では何も“感じていない”。あなたは見抜けますか？",
+      "views": 196,
+      "likes": 6,
+      "comments_total_including_creator": 1,
+      "saves": 1
+    },
+    {
+      "label": "スワンプマン",
+      "hook": "あなたが死んだ直後、あなたと完全に同じ人が現れたら――あなたはまだ生きていることになる？",
+      "views": 184,
+      "likes": 3,
+      "comments_total_including_creator": 1,
+      "saves": 0
+    },
+    {
+      "label": "ペーパークリップ・マキシマイザー",
+      "hook": "あなたの命令は正しい。AIも失敗していない。それでも世界が終わったら、誰のミスですか？",
+      "views": 183,
+      "saves": 1
+    },
+    {
+      "label": "ギュゲスの指輪",
+      "hook": "誰にも絶対バレない。罰も、評判も、ゼロ。それでもあなたは『正しく』生きますか？",
+      "views": 177,
+      "likes": 2,
+      "comments_total_including_creator": 4,
+      "saves": 1
+    },
+    {
+      "label": "トロッコ問題",
+      "hook": "5人を助けるために、1人を犠牲にできますか？",
+      "views": 164,
+      "likes": 2,
+      "comments_total_including_creator": 1,
+      "shares": 0,
+      "saves": 0,
+      "studio": {
+        "photos_viewed_avg": 2.5,
+        "photo_count": 8,
+        "total_play_seconds": 1256,
+        "new_followers": 0,
+        "traffic_source_pct": {
+          "recommended": 94.2,
+          "other": 4.2,
+          "personal_profile": 1.1,
+          "search": 0.5,
+          "following": 0.0,
+          "direct_message": 0.0,
+          "music": 0.0
+        }
+      }
+    }
+  ],
+  "notes": [
+    "TikTok's displayed comment totals can include comments posted by the creator account. Do not treat them as pure audience-comment counts.",
+    "The Display API does not expose TikTok Studio metrics such as average photos viewed, total play time, retention, saves, traffic-source breakdown, or search queries. Those remain manual/screenshot-derived fields.",
+    "The API collector will verify whether the authorized /v2/video/list/ endpoint returns this account's photo carousel posts."
+  ]
+}
