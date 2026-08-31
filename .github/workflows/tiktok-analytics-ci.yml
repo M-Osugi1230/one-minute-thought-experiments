@@ -1,0 +1,37 @@
+name: TikTok Analytics CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "scripts/tiktok_analytics.py"
+      - ".github/workflows/tiktok-analytics*.yml"
+      - "requirements.txt"
+      - "pyproject.toml"
+  pull_request:
+    paths:
+      - "scripts/tiktok_analytics.py"
+      - ".github/workflows/tiktok-analytics*.yml"
+      - "requirements.txt"
+      - "pyproject.toml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install minimal dependencies
+        run: python -m pip install --disable-pip-version-check "cryptography>=43,<47" "python-dotenv>=1,<2"
+      - name: Compile analytics script
+        run: python -m py_compile scripts/tiktok_analytics.py
+      - name: Smoke test CLI
+        run: |
+          python scripts/tiktok_analytics.py --help
+          python scripts/tiktok_analytics.py keygen | python -c "import sys; from cryptography.fernet import Fernet; Fernet(sys.stdin.read().strip().encode()); print('fernet key ok')"
