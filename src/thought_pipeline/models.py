@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import Literal
+from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, HttpUrl, model_validator
 
@@ -47,7 +47,7 @@ class PhilosophicalFocus(StrictModel):
 class Source(StrictModel):
     author: str = Field(min_length=1)
     title: str = Field(min_length=1)
-    year: int = Field(ge=1500, le=2100)
+    year: Annotated[int, Field(ge=1, le=2100)] | Annotated[str, Field(min_length=1, max_length=80)]
     kind: Literal["primary", "secondary"]
     locator: str = Field(min_length=1)
     url: HttpUrl | None = None
