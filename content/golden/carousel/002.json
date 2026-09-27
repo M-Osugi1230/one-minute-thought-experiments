@@ -1,0 +1,100 @@
+{
+  "schema_version": "1.0",
+  "experiment_id": "002",
+  "experiment_title": "テセウスの船",
+  "working_title": "全部の部品を交換した船は、まだ同じ船ですか？",
+  "format": "tiktok_photo_carousel",
+  "pages": 8,
+  "selected_hook": {
+    "screen_text": "全部の部品を交換した船は、まだ同じ船ですか？",
+    "angle": "固有名詞を出さず、変化と同一性を一文で突きつける"
+  },
+  "carousel": [
+    {
+      "page": 1,
+      "purpose": "hook",
+      "label": "THOUGHT EXPERIMENT",
+      "screen_text": "全部の部品を交換した船は、まだ同じ船ですか？",
+      "footer": "スワイプして考える　›",
+      "emphasis_words": ["全部", "同じ船"],
+      "visual_description": "夜の古い木造船。修復途中で、古い板と新しい板の違いがわずかに分かる。船は右側、左上から左中央に大きな暗い余白。最も強いHero。"
+    },
+    {
+      "page": 2,
+      "purpose": "scene",
+      "label": "SCENE",
+      "screen_text": "古い船を、何年もかけて修理します。\n傷んだ板を、1枚ずつ新品に交換。",
+      "emphasis_words": ["1枚ずつ", "新品"],
+      "visual_description": "木造船の船腹から傷んだ板を一枚外し、新しい板へ交換している手元。右下に作業、左側は暗い余白。アンバーのランタン光。"
+    },
+    {
+      "page": 3,
+      "purpose": "mechanism",
+      "label": "CHANGE",
+      "screen_text": "交換は少しずつ続きます。\nそして最後には、元の部品が1つも残りません。",
+      "emphasis_words": ["少しずつ", "1つも残らない"],
+      "visual_description": "同じ木造船が長い年月を経て修復され、船体の大部分が新しい木へ置き換わった状態。右側に古い板の積み重ね。時間経過を静かに示す。"
+    },
+    {
+      "page": 4,
+      "purpose": "conflict",
+      "label": "CONFLICT",
+      "screen_text": "形も、名前も、役割も続いている。\nでも、材料は全部別物です。",
+      "emphasis_words": ["続いている", "全部別物"],
+      "visual_description": "修復完了した木造船が同じ港に浮かぶ。輪郭と用途は変わらないが、木材だけが新しく見える。静かな夜明け前、左に余白。"
+    },
+    {
+      "page": 5,
+      "purpose": "choice",
+      "label": "CHOICE",
+      "screen_text": "この船は、元と同じ？\nA 同じ船\nB 別の船\n直感で選んでください。",
+      "emphasis_words": ["A 同じ船", "B 別の船"],
+      "visual_description": "修復後の船を暗い水面に一隻だけ置く。判断に集中できるミニマルな構図。右側に船、左側に十分な余白。"
+    },
+    {
+      "page": 6,
+      "purpose": "condition_change",
+      "label": "CONDITION CHANGE",
+      "screen_text": "では、外した古い部品を全部集めて、\nもう1隻、同じ形に組み直したら？\n“元の船”はどちらですか。",
+      "emphasis_words": ["古い部品", "もう1隻", "どちら"],
+      "visual_description": "よく似た二隻の木造船が並ぶ。一隻は新しい木材で修復され、もう一隻は古びた元の板で再組立てされている。どちらも同じ形。対等な扱いで右側から中央に配置。"
+    },
+    {
+      "page": 7,
+      "purpose": "reveal",
+      "label": "REVEAL",
+      "screen_text": "これは「テセウスの船」。\n部品が変わっても同じと言えるのか、古代から議論されてきた思考実験です。\n古い部品を組み直す条件は、後にホッブズが加えました。",
+      "emphasis_words": ["テセウスの船", "同じ", "ホッブズ"],
+      "visual_description": "古代ギリシャを連想させる静かな港と木造船。遠景に控えめな石柱や港湾建築。解説を邪魔しない暗く落ち着いた背景。"
+    },
+    {
+      "page": 8,
+      "purpose": "your_answer",
+      "label": "YOUR ANSWER",
+      "screen_text": "あなたが“元の船”だと思うのは？\nA 修理を続けた船\nB 古い部品で組み直した船\n最初の答えと変わった？理由もコメントで。",
+      "emphasis_words": ["元の船", "A", "B", "理由"],
+      "visual_description": "二隻の同じ形の船が霧の中で左右に分かれていくような静かな余韻。左側に大きな暗い余白。結論を示さない中立な構図。"
+    }
+  ],
+  "visual_system": {
+    "style": "Dark Cinematic + Minimal Editorial",
+    "canvas": "1080x1920",
+    "palette": "deep charcoal / black, muted amber-gold practical light, selective cool steel shadows",
+    "rules": [
+      "背景に文字・ロゴ・数字・UIを生成しない",
+      "左上〜左中央に日本語テキスト用のnegative spaceを確保する",
+      "重要オブジェクトは右・右下・中央下へ寄せる",
+      "写実寄り、微細な霧とフィルムグレイン、ストック写真感を避ける",
+      "選択肢A/Bのどちらかを視覚的に優遇しない"
+    ]
+  },
+  "caption": "全部の部品を1つずつ交換した船は、まだ同じ船だと思いますか？ A：同じ船 / B：別の船。では、外した古い部品を全部集めて同じ形に組み直したら、“元の船”はどちらでしょう。これは『テセウスの船』。最初と最後で答えが変わったか、理由も一言コメントで。",
+  "pinned_comment": "最初の答え → 2隻になった後で、考えは変わりましたか？\nA：修理を続けた船 / B：古い部品で組み直した船\nA/B以外の答えなら、それも理由つきで教えてください。",
+  "hashtags": ["思考実験", "テセウスの船", "哲学", "同一性", "あなたならどうする"],
+  "editorial_notes": [
+    "Page 5で最初の判断を明確に取らせ、Page 6でホッブズの再組立て条件を追加して再考させる",
+    "Page 6の二隻は明暗・大きさ・位置で優劣をつけず、中立に描写する",
+    "Page 7まで思考実験名を出さない",
+    "書籍本文やKindleスクリーンショットは投稿素材として使用しない"
+  ]
+}
