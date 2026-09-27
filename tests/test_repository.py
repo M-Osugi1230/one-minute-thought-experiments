@@ -5,7 +5,7 @@ def test_all_repository_configuration_is_valid() -> None:
     repository = ProjectRepository()
     experiments = repository.validate_all()
 
-    assert [experiment.id for experiment in experiments] == ["001"]
+    assert [experiment.id for experiment in experiments] == ["001", "002"]
     assert experiments[0].slug == "trolley_problem"
     assert repository.video().canvas.width == 1080
     assert repository.video().render.preview_scale == 0.5
