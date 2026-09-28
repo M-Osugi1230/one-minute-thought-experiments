@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import base64
 import json
 import os
 import re
@@ -9,10 +10,8 @@ from typing import Any
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
-ADE_RAW_BASE = (
-    "https://raw.githubusercontent.com/"
-    "M-Osugi1230/autonomous-development-engine/main"
-)
+ADE_REPOSITORY = "M-Osugi1230/autonomous-development-engine"
+ADE_API_BASE = f"https://api.github.com/repos/{ADE_REPOSITORY}"
 JULES_PROVENANCE_MARKER = "PR created automatically by Jules for task"
 JULES_TASK_URL = re.compile(r"https://jules\.google\.com/task/\d+")
 
@@ -31,34 +30,26 @@ def _load_event() -> dict[str, Any]:
     return payload
 
 
-def _github_request(
-    method: str,
-    path: str,
+def _request_json(
+    url: str,
+    *,
+    method: str = "GET",
+    token: str | None = None,
     payload: dict[str, Any] | None = None,
 ) -> Any:
-    token = os.environ.get("GITHUB_TOKEN", "")
-    repository = os.environ.get("GITHUB_REPOSITORY", "")
-    if not token:
-        raise GateError("GITHUB_TOKEN is required")
-    if "/" not in repository:
-        raise GateError("GITHUB_REPOSITORY must be owner/name")
-
     body = None if payload is None else json.dumps(payload).encode("utf-8")
     headers = {
         "Accept": "application/vnd.github+json",
-        "Authorization": f"Bearer {token}",
         "X-GitHub-Api-Version": "2022-11-28",
-        "User-Agent": "ADE-Remote-PR-Gate/1.0",
+        "User-Agent": "ADE-Remote-PR-Gate/1.1",
+        "Cache-Control": "no-cache",
     }
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
     if body is not None:
         headers["Content-Type"] = "application/json"
 
-    request = Request(
-        "https://api.github.com" + path,
-        data=body,
-        headers=headers,
-        method=method,
-    )
+    request = Request(url, data=body, headers=headers, method=method)
     try:
         with urlopen(request, timeout=30) as response:
             raw = response.read()
@@ -76,40 +67,114 @@ def _github_request(
         raise GateError("GitHub returned invalid JSON") from exc
 
 
-def _ade_json(relative_path: str) -> dict[str, Any]:
-    url = ADE_RAW_BASE + "/" + relative_path.lstrip("/")
-    request = Request(
-        url,
-        headers={
-            "Accept": "application/json",
-            "Cache-Control": "no-cache",
-            "User-Agent": "ADE-Remote-PR-Gate/1.0",
-        },
-        method="GET",
-    )
-    try:
-        with urlopen(request, timeout=30) as response:
-            raw = response.read()
-    except HTTPError as exc:
-        detail = exc.read().decode("utf-8", errors="replace")
-        raise GateError(f"ADE contract HTTP {exc.code}: {detail[:500]}") from exc
-    except URLError as exc:
-        raise GateError(f"ADE contract network error: {exc.reason}") from exc
-    try:
-        payload = json.loads(raw.decode("utf-8"))
-    except json.JSONDecodeError as exc:
-        raise GateError(f"ADE contract {relative_path} is invalid JSON") from exc
-    if not isinstance(payload, dict):
-        raise GateError(f"ADE contract {relative_path} must be a JSON object")
-    return payload
-
-
-def _current_contract() -> tuple[str, tuple[str, ...], str]:
+def _github_request(
+    method: str,
+    path: str,
+    payload: dict[str, Any] | None = None,
+) -> Any:
+    token = os.environ.get("GITHUB_TOKEN", "")
     repository = os.environ.get("GITHUB_REPOSITORY", "")
-    state = _ade_json(".autodev/state.json")
-    accepted = _ade_json(".autodev/accepted-plan.json")
-    campaign = _ade_json(".autodev/campaign.json")
-    graph = _ade_json(".autodev/task-graph.json")
+    if not token:
+        raise GateError("GITHUB_TOKEN is required")
+    if "/" not in repository:
+        raise GateError("GITHUB_REPOSITORY must be owner/name")
+    return _request_json(
+        "https://api.github.com" + path,
+        method=method,
+        token=token,
+        payload=payload,
+    )
+
+
+def _ade_head_sha() -> str:
+    payload = _request_json(f"{ADE_API_BASE}/commits/main")
+    if not isinstance(payload, dict):
+        raise GateError("ADE main commit response must be an object")
+    sha = payload.get("sha")
+    if not isinstance(sha, str) or not re.fullmatch(r"[0-9a-f]{40}", sha):
+        raise GateError("ADE main commit SHA is invalid")
+    return sha
+
+
+def _ade_json(relative_path: str, *, ref: str) -> dict[str, Any]:
+    path = relative_path.lstrip("/")
+    payload = _request_json(f"{ADE_API_BASE}/contents/{path}?ref={ref}")
+    if not isinstance(payload, dict):
+        raise GateError(f"ADE contract {relative_path} response must be an object")
+    encoded = payload.get("content")
+    if not isinstance(encoded, str):
+        raise GateError(f"ADE contract {relative_path} has no content")
+    try:
+        raw = base64.b64decode(encoded.replace("\n", ""))
+        decoded = json.loads(raw.decode("utf-8"))
+    except (ValueError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise GateError(f"ADE contract {relative_path} is invalid JSON") from exc
+    if not isinstance(decoded, dict):
+        raise GateError(f"ADE contract {relative_path} must be a JSON object")
+    return decoded
+
+
+def _github_list_pr_files(
+    repository: str,
+    pr_number: int,
+    *,
+    page_size: int = 100,
+    max_pages: int = 20,
+) -> list[dict[str, Any]]:
+    if type(pr_number) is not int or pr_number < 1:
+        raise GateError("pull request number must be positive")
+    if type(page_size) is not int or not 1 <= page_size <= 100:
+        raise GateError("page_size must be between 1 and 100")
+    if type(max_pages) is not int or max_pages < 1:
+        raise GateError("max_pages must be positive")
+
+    result: list[dict[str, Any]] = []
+    for page in range(1, max_pages + 1):
+        payload = _github_request(
+            "GET",
+            f"/repos/{repository}/pulls/{pr_number}/files"
+            f"?per_page={page_size}&page={page}",
+        )
+        if not isinstance(payload, list):
+            raise GateError("pull request files response must be a list")
+        items = [item for item in payload if isinstance(item, dict)]
+        result.extend(items)
+        if len(payload) < page_size:
+            return result
+    raise GateError("pull request files pagination exceeded trusted page budget")
+
+
+def _validate_remote_receipt(
+    receipt: dict[str, Any],
+    *,
+    repository: str,
+    task_id: str,
+    pr_number: int,
+) -> None:
+    if receipt.get("schema_version") != 1:
+        raise GateError("ADE remote receipt schema_version is invalid")
+    if receipt.get("status") != "PR_CREATED":
+        raise GateError("ADE remote receipt is not PR_CREATED")
+    if receipt.get("task_id") != task_id:
+        raise GateError("ADE remote receipt task_id does not match current task")
+    if receipt.get("target_repository") != repository:
+        raise GateError("ADE remote receipt target_repository does not match this repository")
+    expected_url = f"https://github.com/{repository}/pull/{pr_number}"
+    if receipt.get("pull_request_url") != expected_url:
+        raise GateError("ADE remote receipt does not bind this pull request")
+
+
+def _current_contract(
+    *,
+    pr_number: int,
+) -> tuple[str, tuple[str, ...], str, str]:
+    repository = os.environ.get("GITHUB_REPOSITORY", "")
+    ade_ref = _ade_head_sha()
+    state = _ade_json(".autodev/state.json", ref=ade_ref)
+    accepted = _ade_json(".autodev/accepted-plan.json", ref=ade_ref)
+    campaign = _ade_json(".autodev/campaign.json", ref=ade_ref)
+    graph = _ade_json(".autodev/task-graph.json", ref=ade_ref)
+    receipt = _ade_json(".autodev/runtime/remote-execution.json", ref=ade_ref)
 
     metadata = state.get("metadata")
     if not isinstance(metadata, dict):
@@ -153,8 +218,10 @@ def _current_contract() -> tuple[str, tuple[str, ...], str]:
     for value in allowed:
         if not isinstance(value, str) or not value.strip():
             raise GateError("ADE allowed_paths contains an invalid value")
-        if value.startswith("/") or ".." in value.split("/") or value.startswith(
-            (".github/", ".autodev/")
+        if (
+            value.startswith("/")
+            or ".." in value.split("/")
+            or value.startswith((".github/", ".autodev/"))
         ):
             raise GateError(f"ADE allowed path is unsafe: {value}")
         allowed_paths.append(value)
@@ -185,10 +252,17 @@ def _current_contract() -> tuple[str, tuple[str, ...], str]:
     if graph_node is None or graph_node.get("status") != "RUNNING":
         raise GateError("ADE current task is not RUNNING in Task DAG")
 
+    _validate_remote_receipt(
+        receipt,
+        repository=repository,
+        task_id=task_id,
+        pr_number=pr_number,
+    )
+
     base_branch = metadata.get("target_base_branch", "main")
     if not isinstance(base_branch, str) or not base_branch.strip():
         raise GateError("ADE target base branch is invalid")
-    return task_id, tuple(allowed_paths), base_branch
+    return task_id, tuple(allowed_paths), base_branch, ade_ref
 
 
 def _validate_pr(
@@ -197,6 +271,7 @@ def _validate_pr(
     *,
     allowed_paths: tuple[str, ...],
     base_branch: str,
+    ci_head_sha: str,
 ) -> None:
     repository = os.environ.get("GITHUB_REPOSITORY", "")
     if pr.get("state") != "open":
@@ -213,11 +288,18 @@ def _validate_pr(
     head_ref = head.get("ref")
     if not isinstance(head_ref, str) or head_ref in {"main", "master"}:
         raise GateError("pull request head branch is invalid")
+    head_sha = head.get("sha")
+    if not isinstance(head_sha, str) or not head_sha:
+        raise GateError("pull request head SHA is missing")
+    if head_sha != ci_head_sha:
+        raise GateError("pull request head SHA does not match the SHA that passed CI")
 
     base = pr.get("base")
     if not isinstance(base, dict) or base.get("ref") != base_branch:
         raise GateError("pull request base branch does not match ADE contract")
 
+    # Editable PR text is only supplemental evidence. The authoritative
+    # task/PR binding comes from ADE's trusted remote-execution receipt.
     body = pr.get("body")
     if not isinstance(body, str):
         raise GateError("Jules provenance marker is missing")
@@ -252,6 +334,12 @@ def main() -> int:
             print("WAIT: target CI is not green")
             return 0
 
+        ci_head_sha = workflow_run.get("head_sha")
+        if not isinstance(ci_head_sha, str) or not re.fullmatch(
+            r"[0-9a-f]{40}", ci_head_sha
+        ):
+            raise GateError("workflow_run head_sha is invalid")
+
         pull_requests = workflow_run.get("pull_requests")
         if not isinstance(pull_requests, list) or len(pull_requests) != 1:
             print("SKIP: expected exactly one associated pull request")
@@ -264,20 +352,17 @@ def main() -> int:
         pr = _github_request("GET", f"/repos/{repository}/pulls/{pr_number}")
         if not isinstance(pr, dict):
             raise GateError("pull request response must be an object")
-        files_payload = _github_request(
-            "GET",
-            f"/repos/{repository}/pulls/{pr_number}/files?per_page=100",
-        )
-        if not isinstance(files_payload, list):
-            raise GateError("pull request files response must be a list")
-        files = [item for item in files_payload if isinstance(item, dict)]
+        files = _github_list_pr_files(repository, pr_number)
 
-        task_id, allowed_paths, base_branch = _current_contract()
+        task_id, allowed_paths, base_branch, ade_ref = _current_contract(
+            pr_number=pr_number
+        )
         _validate_pr(
             pr,
             files,
             allowed_paths=allowed_paths,
             base_branch=base_branch,
+            ci_head_sha=ci_head_sha,
         )
 
         head = pr.get("head")
@@ -299,7 +384,7 @@ def main() -> int:
 
         print(
             f"MERGED: ADE remote task {task_id} via target PR #{pr_number}; "
-            f"scope={list(allowed_paths)}"
+            f"ade_ref={ade_ref}; scope={list(allowed_paths)}"
         )
         return 0
     except (GateError, ValueError, KeyError, json.JSONDecodeError, OSError) as exc:
