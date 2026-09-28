@@ -109,12 +109,12 @@ def test_pr_file_listing_fetches_all_pages(monkeypatch: pytest.MonkeyPatch) -> N
     def fake_request(method: str, path: str, payload=None):
         assert method == "GET"
         calls.append(path)
-        if "page=1" in path:
+        if path.endswith("&page=1"):
             return [
                 {"filename": f"tests/test_{index}.py", "status": "added"}
                 for index in range(100)
             ]
-        if "page=2" in path:
+        if path.endswith("&page=2"):
             return [{"filename": "tests/test_last.py", "status": "added"}]
         raise AssertionError(path)
 
@@ -127,5 +127,5 @@ def test_pr_file_listing_fetches_all_pages(monkeypatch: pytest.MonkeyPatch) -> N
 
     assert len(files) == 101
     assert len(calls) == 2
-    assert "page=1" in calls[0]
-    assert "page=2" in calls[1]
+    assert calls[0].endswith("&page=1")
+    assert calls[1].endswith("&page=2")
