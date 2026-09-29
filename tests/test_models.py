@@ -4,7 +4,9 @@ import pytest
 
 from thought_pipeline.models import (
     ExperimentSeriesLabelSummary,
+    ExperimentVariantLabelSummary,
     normalize_experiment_series_label,
+    normalize_experiment_variant_label,
 )
 
 
@@ -75,3 +77,72 @@ def test_normalize_experiment_series_label_rejects_empty_or_whitespace_input(
 ) -> None:
     with pytest.raises(ValueError, match="label cannot be empty or whitespace-only"):
         normalize_experiment_series_label(empty_input)
+
+
+def test_normalize_experiment_variant_label_valid_inputs() -> None:
+    res = normalize_experiment_variant_label("  Variant   A  ")
+    assert res.display_label == "Variant A"
+    assert res.key == "variant-a"
+
+    res_tab_newline = normalize_experiment_variant_label("  \t  Variant\n  A \r ")
+    assert res_tab_newline.display_label == "Variant A"
+    assert res_tab_newline.key == "variant-a"
+
+    res_casefold = normalize_experiment_variant_label("ß-Variant")
+    assert res_casefold.display_label == "ß-Variant"
+    assert res_casefold.key == "ss-variant"
+
+    res_unicode = normalize_experiment_variant_label("ÉLÉPHANT   VARIANT")
+    assert res_unicode.display_label == "ÉLÉPHANT VARIANT"
+    assert res_unicode.key == "éléphant-variant"
+
+    res_single = normalize_experiment_variant_label("  Variant  ")
+    assert res_single.display_label == "Variant"
+    assert res_single.key == "variant"
+
+
+def test_normalize_experiment_variant_label_returns_frozen_summary() -> None:
+    res = normalize_experiment_variant_label("  Variant   A  ")
+    assert isinstance(res, ExperimentVariantLabelSummary)
+    assert res.display_label == "Variant A"
+    assert res.key == "variant-a"
+
+    with pytest.raises((FrozenInstanceError, AttributeError)):
+        res.display_label = "Other Variant"  # type: ignore[misc]
+
+    with pytest.raises((FrozenInstanceError, AttributeError)):
+        res.key = "other-variant"  # type: ignore[misc]
+
+
+@pytest.mark.parametrize(
+    "invalid_input",
+    [
+        None,
+        123,
+        12.34,
+        True,
+        ["Variant A"],
+        {"label": "Variant A"},
+    ],
+)
+def test_normalize_experiment_variant_label_rejects_non_string_input(
+    invalid_input: object,
+) -> None:
+    with pytest.raises(TypeError, match="label must be a string"):
+        normalize_experiment_variant_label(invalid_input)
+
+
+@pytest.mark.parametrize(
+    "empty_input",
+    [
+        "",
+        "   ",
+        "\t\n\r",
+        "     \n  \t ",
+    ],
+)
+def test_normalize_experiment_variant_label_rejects_empty_or_whitespace_input(
+    empty_input: str,
+) -> None:
+    with pytest.raises(ValueError, match="label cannot be empty or whitespace-only"):
+        normalize_experiment_variant_label(empty_input)
