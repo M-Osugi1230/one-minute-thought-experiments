@@ -89,7 +89,7 @@ def _parser() -> argparse.ArgumentParser:
 
 def main(argv: list[str] | None = None) -> int:
     args_list = list(sys.argv[1:] if argv is None else argv)
-    if args_list and args_list[0] not in COMMANDS and not args_list[0].startswith("-"):
+    if args_list and args_list[0].isdigit():
         args_list.insert(0, "generate")
 
     args = _parser().parse_args(args_list)
