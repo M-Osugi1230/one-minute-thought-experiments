@@ -96,6 +96,10 @@ def test_normalize_experiment_variant_label_valid_inputs() -> None:
     assert res_unicode.display_label == "ÉLÉPHANT VARIANT"
     assert res_unicode.key == "éléphant-variant"
 
+    res_unicode_whitespace = normalize_experiment_variant_label("  \u00a0 Variant \u2003 A \u00a0 ")
+    assert res_unicode_whitespace.display_label == "Variant A"
+    assert res_unicode_whitespace.key == "variant-a"
+
     res_single = normalize_experiment_variant_label("  Variant  ")
     assert res_single.display_label == "Variant"
     assert res_single.key == "variant"
