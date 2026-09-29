@@ -50,6 +50,47 @@ def normalize_experiment_series_label(label: Any) -> ExperimentSeriesLabelSummar
     return ExperimentSeriesLabelSummary(display_label=display_label, key=key)
 
 
+@dataclass(frozen=True)
+class ExperimentVariantLabelSummary:
+    """Structured summary containing the normalized display label and stable key for an experiment variant."""
+
+    display_label: str
+    key: str
+
+
+def normalize_experiment_variant_label(label: Any) -> ExperimentVariantLabelSummary:
+    """Normalize non-empty experiment variant label into a display label and a stable key.
+
+    >>> res = normalize_experiment_variant_label("  Variant   A  ")
+    >>> res.display_label
+    'Variant A'
+    >>> res.key
+    'variant-a'
+    >>> normalize_experiment_variant_label("ß-Variant").key
+    'ss-variant'
+    >>> try:
+    ...     normalize_experiment_variant_label(123)
+    ... except TypeError as e:
+    ...     print(e)
+    label must be a string
+    >>> try:
+    ...     normalize_experiment_variant_label("   ")
+    ... except ValueError as e:
+    ...     print(e)
+    label cannot be empty or whitespace-only
+    """
+    if not isinstance(label, str):
+        raise TypeError("label must be a string")
+
+    words = label.split()
+    if not words:
+        raise ValueError("label cannot be empty or whitespace-only")
+
+    display_label = " ".join(words)
+    key = display_label.casefold().replace(" ", "-")
+    return ExperimentVariantLabelSummary(display_label=display_label, key=key)
+
+
 class StrictModel(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
