@@ -2,10 +2,52 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from enum import Enum
-from typing import Annotated, Literal
+from typing import Annotated, Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, HttpUrl, model_validator
+
+
+@dataclass(frozen=True)
+class ExperimentSeriesLabelSummary:
+    """Structured summary containing the normalized display label and stable key for an experiment series."""
+
+    display_label: str
+    key: str
+
+
+def normalize_experiment_series_label(label: Any) -> ExperimentSeriesLabelSummary:
+    """Normalize non-empty experiment series label into a display label and a stable key.
+
+    >>> res = normalize_experiment_series_label("  Thought   Series  ")
+    >>> res.display_label
+    'Thought Series'
+    >>> res.key
+    'thought-series'
+    >>> normalize_experiment_series_label("ß-Series").key
+    'ss-series'
+    >>> try:
+    ...     normalize_experiment_series_label(123)
+    ... except TypeError as e:
+    ...     print(e)
+    label must be a string
+    >>> try:
+    ...     normalize_experiment_series_label("   ")
+    ... except ValueError as e:
+    ...     print(e)
+    label cannot be empty or whitespace-only
+    """
+    if not isinstance(label, str):
+        raise TypeError("label must be a string")
+
+    words = label.split()
+    if not words:
+        raise ValueError("label cannot be empty or whitespace-only")
+
+    display_label = " ".join(words)
+    key = display_label.casefold().replace(" ", "-")
+    return ExperimentSeriesLabelSummary(display_label=display_label, key=key)
 
 
 class StrictModel(BaseModel):
