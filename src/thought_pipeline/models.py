@@ -12,6 +12,45 @@ class StrictModel(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
 
+class ExperimentTopicLabelSummary(StrictModel):
+    display_label: str = Field(min_length=1)
+    key: str = Field(min_length=1)
+
+
+def normalize_experiment_topic_label(label: str) -> ExperimentTopicLabelSummary:
+    """Normalize non-empty experiment topic label into a display label and a stable key.
+
+    >>> res = normalize_experiment_topic_label("  Thought   Experiment  ")
+    >>> res.display_label
+    'Thought Experiment'
+    >>> res.key
+    'thought-experiment'
+    >>> normalize_experiment_topic_label("Trolley Problem").key
+    'trolley-problem'
+    >>> normalize_experiment_topic_label("  AI  Ethics ")
+    ExperimentTopicLabelSummary(display_label='AI Ethics', key='ai-ethics')
+    >>> try:
+    ...     normalize_experiment_topic_label(123)
+    ... except TypeError as e:
+    ...     print(e)
+    label must be a string
+    >>> try:
+    ...     normalize_experiment_topic_label("   ")
+    ... except ValueError as e:
+    ...     print(e)
+    label cannot be empty or whitespace-only
+    """
+    if not isinstance(label, str):
+        raise TypeError("label must be a string")
+
+    display_label = " ".join(label.split())
+    if not display_label:
+        raise ValueError("label cannot be empty or whitespace-only")
+
+    key = display_label.lower().replace(" ", "-")
+    return ExperimentTopicLabelSummary(display_label=display_label, key=key)
+
+
 class DurationRange(StrictModel):
     min_seconds: float = Field(ge=1)
     ideal_seconds: float = Field(ge=1)
