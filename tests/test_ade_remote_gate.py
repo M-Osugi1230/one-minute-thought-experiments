@@ -29,7 +29,7 @@ def _pr(head_sha: str = "a" * 40) -> dict:
             "sha": head_sha,
             "repo": {"full_name": "M-Osugi1230/one-minute-thought-experiments"},
         },
-        "base": {"ref": "main"},
+        "base": {"ref": "main", "sha": "c" * 40},
     }
 
 
