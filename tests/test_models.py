@@ -108,6 +108,10 @@ def test_normalize_experiment_variant_label_valid_inputs() -> None:
     assert res_narrow_nobreak_medium_math.display_label == "Variant A"
     assert res_narrow_nobreak_medium_math.key == "variant-a"
 
+    res_ogham_figure_space = normalize_experiment_variant_label(" \u1680 Variant \u2007 A \u1680 ")
+    assert res_ogham_figure_space.display_label == "Variant A"
+    assert res_ogham_figure_space.key == "variant-a"
+
     res_single = normalize_experiment_variant_label("  Variant  ")
     assert res_single.display_label == "Variant"
     assert res_single.key == "variant"
