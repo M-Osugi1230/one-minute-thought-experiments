@@ -112,6 +112,10 @@ def test_normalize_experiment_variant_label_valid_inputs() -> None:
     assert res_ogham_figure_space.display_label == "Variant A"
     assert res_ogham_figure_space.key == "variant-a"
 
+    res_en_hair_space = normalize_experiment_variant_label(" \u2002 Variant \u200a A \u2002 ")
+    assert res_en_hair_space.display_label == "Variant A"
+    assert res_en_hair_space.key == "variant-a"
+
     res_single = normalize_experiment_variant_label("  Variant  ")
     assert res_single.display_label == "Variant"
     assert res_single.key == "variant"
