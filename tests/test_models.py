@@ -100,6 +100,10 @@ def test_normalize_experiment_variant_label_valid_inputs() -> None:
     assert res_unicode_whitespace.display_label == "Variant A"
     assert res_unicode_whitespace.key == "variant-a"
 
+    res_ideographic_thin_space = normalize_experiment_variant_label(" \u3000 Variant \u2009 A \u3000 ")
+    assert res_ideographic_thin_space.display_label == "Variant A"
+    assert res_ideographic_thin_space.key == "variant-a"
+
     res_single = normalize_experiment_variant_label("  Variant  ")
     assert res_single.display_label == "Variant"
     assert res_single.key == "variant"
