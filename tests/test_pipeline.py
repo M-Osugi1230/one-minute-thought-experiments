@@ -47,3 +47,18 @@ def test_planned_timeline_and_srt_end_at_fifty_seconds() -> None:
     assert "00:00:50,000" in srt
     assert "\n。" not in srt
     assert "変え\nます" not in srt
+
+
+def test_regression_followup_mem_786d667480ca61ad8f1a9f0f(tmp_path) -> None:
+    repository = ProjectRepository()
+    provider = OfflineGoldenProvider(repository.root)
+
+    result = Pipeline(repository).run(
+        "001",
+        provider,
+        output_root=tmp_path,
+    )
+
+    assert result.output_dir.exists()
+    assert result.report.is_valid is True
+    assert result.planned_duration_seconds == 50.0
