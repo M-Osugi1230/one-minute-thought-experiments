@@ -116,6 +116,10 @@ def test_normalize_experiment_variant_label_valid_inputs() -> None:
     assert res_en_hair_space.display_label == "Variant A"
     assert res_en_hair_space.key == "variant-a"
 
+    res_three_six_per_em_space = normalize_experiment_variant_label(" \u2004 Variant \u2006 A \u2004 ")
+    assert res_three_six_per_em_space.display_label == "Variant A"
+    assert res_three_six_per_em_space.key == "variant-a"
+
     res_single = normalize_experiment_variant_label("  Variant  ")
     assert res_single.display_label == "Variant"
     assert res_single.key == "variant"
