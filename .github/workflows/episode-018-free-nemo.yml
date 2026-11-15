@@ -1,0 +1,116 @@
+name: "Episode 018 - free VOICEVOX Nemo narration"
+on:
+  push:
+    branches:
+      - episode-018-free-tts-20261115
+    paths:
+      - .github/workflows/episode-018-free-nemo.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: episode-018-free-nemo
+  cancel-in-progress: true
+jobs:
+  synthesize:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 55
+    steps:
+      - name: Start free official VOICEVOX Nemo engine
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker pull voicevox/voicevox_nemo_engine:cpu-ubuntu20.04-latest
+          docker run -d --rm --name ep018-nemo --network host voicevox/voicevox_nemo_engine:cpu-ubuntu20.04-latest
+          for i in $(seq 1 90); do
+            for port in 50121 50021; do
+              if curl -fsS "http://127.0.0.1:$port/speakers" >/dev/null 2>&1; then
+                echo "NEMO_PORT=$port" >> "$GITHUB_ENV"
+                exit 0
+              fi
+            done
+            sleep 4
+          done
+          docker logs ep018-nemo || true
+          exit 1
+      - name: Synthesize eight original Japanese narration scenes
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p output
+          python3 - <<'PY'
+          import json
+          import urllib.request
+          import urllib.parse
+          import os
+          import pathlib
+          import wave
+
+          port = os.environ["NEMO_PORT"]
+          base = "http://127.0.0.1:" + port
+          scenes = [
+              "「世界は存在しない」。でも、机もあなたも確かに存在します。どういうことでしょう。",
+              "机は部屋に、部屋は街に、地球は宇宙にあります。では、宇宙も数字も記憶も含む「すべて」は、どこに現れるのでしょう。",
+              "哲学者マルクス・ガブリエルは、存在するとは、何らかの「意味の場」に現れることだと考えました。",
+              "星は天文学の中に、数字は数学の中に、記憶は経験の中に。どれも、確かに存在しています。",
+              "では、あらゆる「意味の場」を含む、究極の「世界」そのものはどうでしょう。その世界は、どこに現れるのでしょうか。",
+              "世界の外側に現れるなら、まだ外側があるので「すべて」ではありません。内側に現れるなら、世界も数あるものの一つになってしまいます。",
+              "だから彼の考え方では、机も街も宇宙も存在します。でも、それら全部を含む究極の「世界」は存在しないのです。",
+              "何も存在しない、という話ではありません。「世界」まで一つの「もの」と数えるべきなのか。あなたは、どう考えますか。",
+          ]
+          def request_json(url, data=None):
+              req = urllib.request.Request(url, data=data, method="POST" if data is not None else "GET")
+              with urllib.request.urlopen(req, timeout=90) as r:
+                  return json.load(r)
+          speakers = request_json(base + "/speakers")
+          voice_id = None
+          voice_name = ""
+          for s in speakers:
+              name = str(s.get("name", ""))
+              if "男声1" in name or "男性1" in name:
+                  styles = s.get("styles", [])
+                  if styles:
+                      voice_id = styles[0]["id"]
+                      voice_name = name
+                      break
+          if voice_id is None:
+              ids = [(s.get("name"), st.get("id")) for s in speakers for st in s.get("styles", [])]
+              raise RuntimeError("Nemo male 1 voice unavailable; speakers: " + str(ids))
+          stats = []
+          for idx, text in enumerate(scenes, 1):
+              args = urllib.parse.urlencode({"speaker":voice_id, "text":text})
+              q = request_json(base + "/audio_query?" + args, b"")
+              q["speedScale"] = 1.10
+              q["intonationScale"] = 0.94
+              q["prePhonemeLength"] = 0.09
+              q["postPhonemeLength"] = 0.28
+              synth = urllib.request.Request(
+                  base + "/synthesis?speaker=" + str(voice_id),
+                  data=json.dumps(q, ensure_ascii=False).encode("utf-8"),
+                  headers={"Content-Type":"application/json"},
+                  method="POST"
+              )
+              target = pathlib.Path("output") / f"S{idx:02d}.wav"
+              with urllib.request.urlopen(synth, timeout=200) as r:
+                  target.write_bytes(r.read())
+              with wave.open(str(target), "rb") as f:
+                  duration = f.getnframes() / f.getframerate()
+              if duration < 0.5 or duration > 40:
+                  raise RuntimeError(f"Invalid duration for scene {idx}: {duration}")
+              stats.append({"scene":idx, "seconds":round(duration,3), "filename":target.name, "chars":len(text)})
+              print(f"Scene {idx}: {duration:.2f}s")
+          (pathlib.Path("output") / "metadata.json").write_text(
+              json.dumps({"voice":"VOICEVOX Nemo " + voice_name, "speaker_id":voice_id,
+                          "scenes":stats, "cost":"zero, public GitHub standard runner"},
+                         ensure_ascii=False, indent=2), encoding="utf-8")
+          (pathlib.Path("output") / "CREDIT.txt").write_text(
+              "音声：VOICEVOX Nemo\nhttps://voicevox.hiroshiba.jp/nemo/term/\n",
+              encoding="utf-8")
+          PY
+      - name: Publish narration audio as workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: episode-018-nemo-narration
+          path: output/
+          retention-days: 7
+          if-no-files-found: error
